@@ -2,7 +2,7 @@
   <head></head>
   <body>
     {% for post in posts %}
-    <h1>{{ post.title }}</h1>
+    <h1><a href="post/{{ post.id }}">{{ post.title }}</a></h1>
     <p>{{ post.body }}</p>
     {% endfor %}
   </body>

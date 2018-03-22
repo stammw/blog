@@ -23,3 +23,10 @@ fn index_renders() {
         assert_eq!(response.status(), Status::Ok);
     });
 }
+
+#[test]
+fn gets_one_post() {
+    dispatch!(Get, "/post/1", |_, response: LocalResponse| {
+        assert_eq!(response.status(), Status::Ok);
+    });
+}

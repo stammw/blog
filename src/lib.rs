@@ -35,10 +35,20 @@ fn index(db: db::Database) -> Template {
     Template::render("index", &context)
 }
 
+#[get("/<post_id>")]
+fn get(db: db::Database, post_id: i32) -> Template {
+    let post = posts.filter(id.eq(post_id))
+        .first::<Post>(&*db)
+        .expect("Error loading posts");
+
+    Template::render("post", &post)
+}
+
 pub fn rocket() -> rocket::Rocket {
     rocket::ignite()
         .attach(Template::fairing())
         .manage(db::init_pool())
         .mount("/", routes![index])
+        .mount("/post/", routes![get])
 }
 
