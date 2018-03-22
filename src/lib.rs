@@ -1,4 +1,4 @@
-#![feature(plugin)]
+#![feature(plugin, custom_derive)]
 #![plugin(rocket_codegen)]
 
 extern crate serde;
@@ -26,5 +26,5 @@ pub fn rocket() -> rocket::Rocket {
         .attach(Template::fairing())
         .manage(db::init_pool())
         .mount("/", routes![post::index])
-        .mount("/post/", routes![post::get])
+        .mount("/post/", routes![post::get, post::new])
 }

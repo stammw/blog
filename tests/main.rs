@@ -8,12 +8,22 @@ extern crate rocket_contrib;
 
 use rocket::local::{Client, LocalResponse};
 use rocket::http::Method::*;
-use rocket::http::Status;
+use rocket::http::{Status, ContentType};
 
 macro_rules! dispatch {
     ($method:expr, $path:expr, $test_fn:expr) => ({
         let client = Client::new(stammw_blog::rocket()).unwrap();
         $test_fn(&client, client.req($method, $path).dispatch());
+    })
+}
+
+macro_rules! dispatch_post {
+    ($path:expr, $data:expr, $test_fn:expr) => ({
+        let client = Client::new(stammw_blog::rocket()).unwrap();
+        $test_fn(&client, client.post($path)
+                 .header(ContentType::Form)
+                 .body(&$data)
+                 .dispatch());
     })
 }
 
@@ -25,6 +35,17 @@ fn index_renders() {
 }
 
 #[test]
+fn create_post() {
+    dispatch_post!("/post/new",
+        format!("body={}&title={}", "Body", "Title"),
+        |_, response: LocalResponse| {
+            assert_eq!(response.status(), Status::Ok);
+        }
+    );
+}
+
+#[test]
+#[ignore]
 fn gets_one_post() {
     dispatch!(Get, "/post/1", |_, response: LocalResponse| {
         assert_eq!(response.status(), Status::Ok);

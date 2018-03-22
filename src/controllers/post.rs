@@ -1,10 +1,12 @@
 use std::collections::HashMap;
+use rocket::request::Form;
 use rocket_contrib::Template;
 
 use db;
-use models::Post;
+use models::{NewPost, Post};
 use schema::posts::dsl::*;
 use diesel::prelude::*;
+use diesel::insert_into;
 
 #[get("/")]
 fn index(db: db::Database) -> Template {
@@ -27,3 +29,13 @@ fn get(db: db::Database, post_id: i32) -> Template {
     Template::render("post", &post)
 }
 
+#[post("/new", data = "<post_form>")]
+fn new(db: db::Database, post_form: Option<Form<NewPost>>) -> Template {
+    let post = post_form.unwrap().into_inner();
+    let new_post = insert_into(posts)
+        .values(&post)
+        .get_result::<Post>(&*db)
+        .expect("Failed to insert post");
+
+    Template::render("post", &new_post)
+}
