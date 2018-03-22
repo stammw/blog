@@ -1,6 +1,9 @@
 <html>
   <head></head>
   <body>
-    Hello {{ name }} !
+    {% for post in posts %}
+    <h1>{{ post.title }}</h1>
+    <p>{{ post.body }}</p>
+    {% endfor %}
   </body>
 </html>

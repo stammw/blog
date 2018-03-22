@@ -1,5 +1,5 @@
 [package]
-name = "stammw-blog"
+name = "stammw_blog"
 version = "0.1.0"
 authors = ["Jean-Christophe BEGUE <jc.begue@devisubox.com>"]
 
@@ -7,7 +7,18 @@ authors = ["Jean-Christophe BEGUE <jc.begue@devisubox.com>"]
 rocket = "0.3.6"
 rocket_codegen = "0.3.6"
 diesel = { version = "1.0.0", features = ["postgres"] }
+diesel_codegen = { version = "0.16.0", features = ["postgres"] }
 dotenv = "0.9.0"
+r2d2-diesel = "1.0"
+r2d2 = "0.8"
+serde = "1.0.33"
+serde_derive = "1.0.33"
+serde_json = "1.0.13"
+
+[[bin]]
+doc = false
+path = "src/main.rs"
+name = "digital_rodomontad"
 
 [dependencies.rocket_contrib]
 version = "0.3.6"
