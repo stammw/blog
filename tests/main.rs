@@ -19,7 +19,7 @@ macro_rules! dispatch {
 
 #[test]
 fn index_renders() {
-    dispatch!(Get, "/", |client: &Client, response: LocalResponse| {
+    dispatch!(Get, "/", |_, response: LocalResponse| {
         assert_eq!(response.status(), Status::Ok);
     });
 }
