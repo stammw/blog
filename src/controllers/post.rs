@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use rocket::request::Form;
+use rocket::response::Redirect;
 use rocket_contrib::Template;
 
 use db;
@@ -29,13 +30,19 @@ fn get(db: db::Database, post_id: i32) -> Template {
     Template::render("post", &post)
 }
 
+#[get("/new")]
+fn edit_new() -> Template {
+    let context: HashMap<&str, &str> = HashMap::new();
+    Template::render("edit_post", &context)
+}
+
 #[post("/new", data = "<post_form>")]
-fn new(db: db::Database, post_form: Option<Form<NewPost>>) -> Template {
+fn new(db: db::Database, post_form: Option<Form<NewPost>>) -> Redirect {
     let post = post_form.unwrap().into_inner();
     let new_post = insert_into(posts)
         .values(&post)
         .get_result::<Post>(&*db)
         .expect("Failed to insert post");
 
-    Template::render("post", &new_post)
+    Redirect::to(format!("/post/{}", new_post.id).as_str())
 }

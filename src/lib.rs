@@ -26,5 +26,5 @@ pub fn rocket() -> rocket::Rocket {
         .attach(Template::fairing())
         .manage(db::init_pool())
         .mount("/", routes![post::index])
-        .mount("/post/", routes![post::get, post::new])
+        .mount("/post/", routes![post::get, post::new, post::edit_new])
 }
