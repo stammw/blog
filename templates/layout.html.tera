@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>
+      {% block title %}{% endblock title %}
+    </title>
+  </head>
+  <body>
+    <h1>Digital Rodomontade</h1>
+    {% block body %}{% endblock body %}
+  </body>
+</html>
