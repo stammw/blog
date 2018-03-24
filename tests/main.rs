@@ -39,7 +39,7 @@ fn create_post() {
     dispatch_post!("/post/new",
         format!("body={}&title={}", "Body", "Title"),
         |_, response: LocalResponse| {
-            assert_eq!(response.status(), Status::Ok);
+            assert_eq!(response.status(), Status::SeeOther);
         }
     );
 }

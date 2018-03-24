@@ -4,7 +4,7 @@ use rocket::response::Redirect;
 use rocket_contrib::Template;
 
 use db;
-use models::{NewPost, Post};
+use models::{NewPost, Post, PostRepository};
 use schema::posts::dsl::*;
 use diesel::prelude::*;
 use diesel::insert_into;
@@ -39,10 +39,7 @@ fn edit_new() -> Template {
 #[post("/new", data = "<post_form>")]
 fn new(db: db::Database, post_form: Option<Form<NewPost>>) -> Redirect {
     let post = post_form.unwrap().into_inner();
-    let new_post = insert_into(posts)
-        .values(&post)
-        .get_result::<Post>(&*db)
-        .expect("Failed to insert post");
+    let new_post = db.insert(post);
 
     Redirect::to(format!("/post/{}", new_post.id).as_str())
 }
