@@ -1,7 +1,6 @@
-<html>
-  <head></head>
-  <body>
-      <h1>Create a new post</h1>
+{% extends "layout" %}
+{% block title %}Create a new post{% endblock title %}
+{% block body %}
       <form method="POST" id="edit_post" action="/post/new">
 	  <ul>
 	      <li>title: <input type="text" name="title" /></li>
@@ -9,5 +8,4 @@
 	      <li><input type="submit" value="Create" /></li>
 	  </ul>
       </form>
-  </body>
-</html>
+{% endblock body %}

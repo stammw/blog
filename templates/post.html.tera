@@ -1,7 +1,6 @@
-<html>
-  <head></head>
-  <body>
+{% extends "layout" %}
+{% block title %}{{ title }}{% endblock title %}
+{% block body %}
     <h1>{{ title }}</h1>
     <p>{{ body }}</p>
-  </body>
-</html>
+{% endblock body %}
