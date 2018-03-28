@@ -45,6 +45,16 @@ fn create_post() {
 }
 
 #[test]
+fn create_post_with_empty_title_fails() {
+    dispatch_post!("/post/new",
+        format!("body={}&title={}", "Body", ""),
+        |_, response: LocalResponse| {
+            assert_eq!(response.status(), Status::Ok);
+        }
+    );
+}
+
+#[test]
 #[ignore]
 fn gets_one_post() {
     dispatch!(Get, "/post/1", |_, response: LocalResponse| {

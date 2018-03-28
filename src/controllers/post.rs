@@ -36,12 +36,15 @@ fn edit_new() -> Template {
 }
 
 #[post("/new", data = "<post_form>")]
-fn new(db: db::Database, post_form: Option<Form<NewPost>>) -> Redirect {
+fn new(db: db::Database, post_form: Option<Form<NewPost>>) -> Result<Redirect, Template> {
     let post = post_form.unwrap().into_inner();
     let new_post = insert_into(posts)
         .values(&post)
         .get_result::<Post>(&*db)
         .expect("Failed to insert post");
 
-    Redirect::to(format!("/post/{}", new_post.id).as_str())
+    match post.validate() {
+        Ok(_)    => Ok(Redirect::to(format!("/post/{}", new_post.id).as_str())),
+        Err(err) => Err(Template::render("edit_post", &new_post)),
+    }
 }

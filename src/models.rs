@@ -16,3 +16,14 @@ pub struct NewPost {
     pub body: String,
     pub published: bool,
 }
+
+impl NewPost {
+    pub fn validate(&self) -> Result<(), &'static str> {
+        if self.title.is_empty() {
+            return Err("Title shall not be emty");
+        } else if self.body.is_empty() {
+            return Err("Body shall not be emty");
+        }
+        Ok(())
+    }
+}
