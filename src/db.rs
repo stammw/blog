@@ -10,8 +10,8 @@ use r2d2;
 use diesel::pg::PgConnection;
 use r2d2_diesel::ConnectionManager;
 
-// An alias to the type for a pool of Diesel SQLite connections.
-type Pool = r2d2::Pool<ConnectionManager<PgConnection>>;
+// An alias to the type for a pool of Diesel connections.
+pub type Pool = r2d2::Pool<ConnectionManager<PgConnection>>;
 
 /// Initializes a database pool.
 pub fn init_pool() -> Pool {
@@ -23,6 +23,7 @@ pub fn init_pool() -> Pool {
     r2d2::Pool::new(manager)
         .expect(&format!("Error connecting pool to {}", database_url))
 }
+
 // Connection request guard type: a wrapper around an r2d2 pooled connection.
 pub struct Database(pub r2d2::PooledConnection<ConnectionManager<PgConnection>>);
 

@@ -4,7 +4,7 @@ use rocket::response::Redirect;
 use rocket_contrib::Template;
 
 use db;
-use models::{NewPost, Post, PostRepository};
+use models::{NewPost, Post};
 use schema::posts::dsl::*;
 use diesel::prelude::*;
 use diesel::insert_into;
@@ -26,8 +26,7 @@ fn get(db: db::Database, post_id: i32) -> Template {
     let post = posts.filter(id.eq(post_id))
         .first::<Post>(&*db)
         .expect("Error loading posts");
-
-    Template::render("post", &post)
+    Template::render("post", post)
 }
 
 #[get("/new")]
@@ -39,7 +38,10 @@ fn edit_new() -> Template {
 #[post("/new", data = "<post_form>")]
 fn new(db: db::Database, post_form: Option<Form<NewPost>>) -> Redirect {
     let post = post_form.unwrap().into_inner();
-    let new_post = db.insert(post);
+    let new_post = insert_into(posts)
+        .values(&post)
+        .get_result::<Post>(&*db)
+        .expect("Failed to insert post");
 
     Redirect::to(format!("/post/{}", new_post.id).as_str())
 }
