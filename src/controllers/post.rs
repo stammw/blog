@@ -8,6 +8,7 @@ use models::{NewPost, Post};
 use schema::posts::dsl::*;
 use diesel::prelude::*;
 use diesel::insert_into;
+use pulldown_cmark::{html, Parser};
 
 #[get("/")]
 fn index(db: db::Database) -> Template {
@@ -23,10 +24,11 @@ fn index(db: db::Database) -> Template {
 
 #[get("/<post_id>")]
 fn get(db: db::Database, post_id: i32) -> Template {
-    let post = posts.filter(id.eq(post_id))
+    let mut post = posts.filter(id.eq(post_id))
         .first::<Post>(&*db)
         .expect("Error loading posts");
-    Template::render("post", post)
+
+    Template::render("post", &post)
 }
 
 #[get("/new")]

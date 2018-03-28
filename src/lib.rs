@@ -11,6 +11,7 @@ extern crate r2d2_diesel;
 #[macro_use] extern crate diesel;
 extern crate r2d2;
 extern crate dotenv;
+extern crate pulldown_cmark;
 
 pub mod db;
 pub mod schema;
