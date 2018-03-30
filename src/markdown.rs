@@ -18,10 +18,9 @@ impl Serialize for MarkdownText {
 }
 
 impl<'v> FromFormValue<'v> for MarkdownText {
-    type Error = &'v RawStr;
+    type Error = ();
 
-    fn from_form_value(form_value: &'v RawStr) -> Result<MarkdownText, &'v RawStr> {
-        Parser::new(&form_value.as_str()).for_each(|item| println!("parsed: {:?}", item));
+    fn from_form_value(form_value: &'v RawStr) -> Result<MarkdownText, ()> {
         Ok(MarkdownText(form_value.to_string()))
     }
 }

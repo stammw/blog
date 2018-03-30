@@ -8,7 +8,6 @@ use models::{NewPost, Post};
 use schema::posts::dsl::*;
 use diesel::prelude::*;
 use diesel::insert_into;
-use pulldown_cmark::{html, Parser};
 
 #[get("/")]
 fn index(db: db::Database) -> Template {
@@ -24,7 +23,7 @@ fn index(db: db::Database) -> Template {
 
 #[get("/<post_id>")]
 fn get(db: db::Database, post_id: i32) -> Template {
-    let mut post = posts.filter(id.eq(post_id))
+    let post = posts.filter(id.eq(post_id))
         .first::<Post>(&*db)
         .expect("Error loading posts");
 
@@ -47,6 +46,6 @@ fn new(db: db::Database, post_form: Option<Form<NewPost>>) -> Result<Redirect, T
 
     match post.validate() {
         Ok(_)    => Ok(Redirect::to(format!("/post/{}", new_post.id).as_str())),
-        Err(err) => Err(Template::render("edit_post", &new_post)),
+        Err(_) => Err(Template::render("edit_post", &new_post)),
     }
 }

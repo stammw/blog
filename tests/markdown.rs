@@ -30,6 +30,6 @@ fn fromform_success() {
                    code\n\
                    ```\n";
 
-    let validated = MarkdownText::from_form_value(RawStr::from_str(&md_str));
-    assert!(validated.is_ok());
+    let value = MarkdownText::from_form_value(RawStr::from_str(&md_str));
+    assert!(value.is_ok());
 }
