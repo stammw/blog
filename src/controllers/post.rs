@@ -12,9 +12,12 @@ use diesel::insert_into;
 #[get("/")]
 fn index(db: db::Database) -> Template {
     let mut context = HashMap::new();
-    let last_post = posts.limit(5)
+    let last_post: Vec<Post> = posts.limit(5)
         .load::<Post>(&*db)
-        .expect("Error loading posts");
+        .expect("Error loading posts")
+        .into_iter()
+        .map(|p| p.format())
+        .collect();
 
     context.insert("posts".to_string(), last_post);
 
@@ -27,7 +30,7 @@ fn get(db: db::Database, post_id: i32) -> Template {
         .first::<Post>(&*db)
         .expect("Error loading posts");
 
-    Template::render("post", &post)
+    Template::render("post", &post.format())
 }
 
 #[get("/new")]

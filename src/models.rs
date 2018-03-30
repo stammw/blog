@@ -1,4 +1,5 @@
 use schema::posts;
+use pulldown_cmark::{html, Parser};
 
 #[derive(Queryable, Serialize, Deserialize, Clone, FromForm, Insertable)]
 #[table_name="posts"]
@@ -25,5 +26,16 @@ impl NewPost {
             return Err("Body shall not be emty");
         }
         Ok(())
+    }
+}
+
+impl Post {
+    pub fn format(self) -> Post {
+        let to_format = self.body.to_owned();
+        let parser = Parser::new(&to_format.as_str());
+        let mut formated_post = self;
+        formated_post.body.truncate(0);
+        html::push_html(&mut formated_post.body, parser);
+        formated_post
     }
 }
