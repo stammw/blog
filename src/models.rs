@@ -30,12 +30,11 @@ impl NewPost {
 }
 
 impl Post {
-    pub fn format(self) -> Post {
+    pub fn format(mut self) -> Post {
         let to_format = self.body.to_owned();
         let parser = Parser::new(&to_format.as_str());
-        let mut formated_post = self;
-        formated_post.body.truncate(0);
-        html::push_html(&mut formated_post.body, parser);
-        formated_post
+        self.body.truncate(0);
+        html::push_html(&mut self.body, parser);
+        self
     }
 }
