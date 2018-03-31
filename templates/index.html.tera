@@ -1,8 +1,0 @@
-{% extends "layout" %}
-{% block title %}The make a blog experiment to try rust in web{% endblock title %}
-{% block body %}
-    {% for post in posts %}
-    <h1><a href="post/{{ post.id }}">{{ post.title }}</a></h1>
-    <p>{{ post.body }}</p>
-    {% endfor %}
-{% endblock body %}
