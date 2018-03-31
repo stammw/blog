@@ -1,17 +1,20 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>
-      {{#if title}}
-        {{title}}
-      {{else}}
-        Digital Rodomontade
-      {{/if}}
-    </title>
-  </head>
-  <body>
-    <h1>Digital Rodomontade</h1>
+    <head>
+	<title>
+	    {{#if title}}
+		{{title}}
+	    {{else}}
+		Digital Rodomontade
+	    {{/if}}
+	</title>
+    </head>
+    <body>
+	<h1><a href="/">Digital Rodomontade</a></h1>
+	<form action="/post/new">
+	    <input type="submit" value="Create a new post" />
+	</form>
 	{{#> body-block }}
 	{{/body-block}}
-  </body>
+    </body>
 </html>
