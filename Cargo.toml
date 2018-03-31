@@ -24,4 +24,4 @@ name = "digital_rodomontad"
 [dependencies.rocket_contrib]
 version = "0.3.6"
 default-features = false
-features = ["handlebars_templates", "tera_templates"]
+features = ["handlebars_templates"]

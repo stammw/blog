@@ -1,6 +1,5 @@
-{% extends "layout" %}
-{% block title %}Create a new post{% endblock title %}
-{% block body %}
+{{#> layout title="Create a new post"}}
+{{#*inline "body-block"}}
       <form method="POST" id="edit_post" action="/post/new">
 	  <ul>
 	      <li>title: <input type="text" name="title" /></li>
@@ -8,4 +7,5 @@
 	      <li><input type="submit" value="Create" /></li>
 	  </ul>
       </form>
-{% endblock body %}
+{{/inline}}
+{{/layout}}
