@@ -19,13 +19,22 @@ pub mod models;
 pub mod controllers;
 
 use rocket_contrib::Template;
+use std::path::{Path, PathBuf};
+use rocket::response::NamedFile;
 
 use controllers::post;
+
+#[get("/<file..>")]
+fn static_file(file: PathBuf) -> Option<NamedFile> {
+    NamedFile::open(Path::new("public/").join(file))
+        .ok() 
+}
 
 pub fn rocket() -> rocket::Rocket {
     rocket::ignite()
         .attach(Template::fairing())
         .manage(db::init_pool())
         .mount("/", routes![post::index])
+        .mount("/public/", routes![static_file])
         .mount("/post/", routes![post::get, post::new, post::edit_new])
 }
