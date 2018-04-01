@@ -18,8 +18,9 @@ pub mod schema;
 pub mod models;
 pub mod controllers;
 
-use rocket_contrib::Template;
 use std::path::{Path, PathBuf};
+use std::collections::HashMap;
+use rocket_contrib::Template;
 use rocket::response::NamedFile;
 
 use controllers::post;
@@ -30,11 +31,17 @@ fn static_file(file: PathBuf) -> Option<NamedFile> {
         .ok() 
 }
 
+#[get("/login")]
+fn login() -> Template {
+    let context: HashMap<String, String> = HashMap::new();
+    Template::render("login", &context)
+}
+
 pub fn rocket() -> rocket::Rocket {
     rocket::ignite()
         .attach(Template::fairing())
         .manage(db::init_pool())
-        .mount("/", routes![post::index])
+        .mount("/", routes![post::index, login])
         .mount("/public/", routes![static_file])
         .mount("/post/", routes![post::get, post::new, post::edit_new])
 }
