@@ -31,17 +31,36 @@ fn static_file(file: PathBuf) -> Option<NamedFile> {
         .ok() 
 }
 
+use rocket::response::Redirect;
+use rocket::request::Form;
+
 #[get("/login")]
 fn login() -> Template {
     let context: HashMap<String, String> = HashMap::new();
     Template::render("login", &context)
 }
 
+#[derive(FromForm)]
+struct Login {
+    email: String,
+    password: String,
+}
+
+#[post("/login", data = "<login_form>")]
+fn login_check(login_form: Option<Form<Login>>) -> Redirect {
+    let login = login_form.unwrap().into_inner();
+    if login.email == "yep@yep.yep" && login.password == "yep" {
+        Redirect::to("/")
+    } else {
+        Redirect::to("/login")
+    }
+}
+
 pub fn rocket() -> rocket::Rocket {
     rocket::ignite()
         .attach(Template::fairing())
         .manage(db::init_pool())
-        .mount("/", routes![post::index, login])
+        .mount("/", routes![post::index, login, login_check])
         .mount("/public/", routes![static_file])
         .mount("/post/", routes![post::get, post::new, post::edit_new])
 }
