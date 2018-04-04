@@ -28,7 +28,7 @@ fn index(db: db::Database) -> Template {
 fn get(db: db::Database, post_id: i32) -> Template {
     let post = posts.filter(id.eq(post_id))
         .first::<Post>(&*db)
-        .expect("Error loading posts");
+        .expect("Error loading posts"); // TODO return 404
 
     Template::render("post", &post.format())
 }
