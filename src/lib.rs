@@ -12,6 +12,7 @@ extern crate r2d2_diesel;
 extern crate r2d2;
 extern crate dotenv;
 extern crate pulldown_cmark;
+extern crate time;
 
 pub mod db;
 pub mod schema;

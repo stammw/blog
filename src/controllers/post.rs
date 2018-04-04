@@ -4,6 +4,7 @@ use rocket::response::Redirect;
 use rocket_contrib::Template;
 
 use db;
+use login::UserCookie;
 use models::{NewPost, Post};
 use schema::posts::dsl::*;
 use diesel::prelude::*;
@@ -34,7 +35,7 @@ fn get(db: db::Database, post_id: i32) -> Template {
 }
 
 #[get("/new")]
-fn edit_new() -> Template {
+fn edit_new(_user_cookie: UserCookie) -> Template {
     let context: HashMap<&str, &str> = HashMap::new();
     Template::render("edit_post", &context)
 }
