@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use rocket::request::Form;
 use rocket::response::Redirect;
 use rocket_contrib::Template;
+use serde::ser::Serialize;
 
 use db;
 use login::UserCookie;
@@ -9,6 +10,16 @@ use models::{NewPost, Post};
 use schema::posts::dsl::*;
 use diesel::prelude::*;
 use diesel::insert_into;
+
+fn empty_context() -> HashMap<String, String> {
+    HashMap::new()
+}
+
+fn user_context<T>(context: T) -> HashMap<String, String>
+where T: Serialize
+{
+    HashMap::new()
+}
 
 #[get("/")]
 fn index(db: db::Database) -> Template {
@@ -37,7 +48,7 @@ fn get(db: db::Database, post_id: i32) -> Template {
 #[get("/new")]
 fn edit_new(_user_cookie: UserCookie) -> Template {
     let context: HashMap<&str, &str> = HashMap::new();
-    Template::render("edit_post", &context)
+    Template::render("edit_post", &empty_context())
 }
 
 #[post("/new", data = "<post_form>")]
