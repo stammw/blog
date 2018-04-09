@@ -16,11 +16,15 @@
 		<a class="navbar-brand" href="/">Digital Rodomontade</a>
 		<div class="collapse navbar-collapse" id="navbarSupportedContent">
 		    <ul class="navbar-nav mr-auto">
-			<li class="nav-item">
-			    <form action="/post/new">
-				<input class="btn" type="submit" value="New Post" />
-			    </form>
-			</li>
+			{{#if user}}
+			    <li class="nav-item">
+				<form action="/post/new">
+				    <input class="btn" type="submit" value="New Post" />
+				</form>
+			    </li>
+
+			<li>{{ user.name }}</li>
+			{{/if}}
 		    </ul>
 		</div>
 	    </div>

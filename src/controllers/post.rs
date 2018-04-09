@@ -3,6 +3,7 @@ use rocket::request::Form;
 use rocket::response::Redirect;
 use rocket_contrib::Template;
 use serde::ser::Serialize;
+use serde_json;
 
 use db;
 use login::UserCookie;
@@ -15,15 +16,17 @@ fn empty_context() -> HashMap<String, String> {
     HashMap::new()
 }
 
-fn user_context<T>(context: T) -> HashMap<String, String>
+fn user_context<T>(user_data: T) -> HashMap<String, serde_json::Value>
 where T: Serialize
 {
-    HashMap::new()
+    let mut context = HashMap::new();
+    context.insert("user".to_string(), json!(&user_data));
+    context
 }
 
 #[get("/")]
-fn index(db: db::Database) -> Template {
-    let mut context = HashMap::new();
+fn index(db: db::Database, user_cookie: Option<UserCookie>) -> Template {
+    let mut context = user_cookie.map_or(HashMap::new(), |c| user_context(c));
     let last_post: Vec<Post> = posts.limit(50)
         .load::<Post>(&*db)
         .expect("Error loading posts")
@@ -31,7 +34,7 @@ fn index(db: db::Database) -> Template {
         .map(|p| p.format())
         .collect();
 
-    context.insert("posts".to_string(), last_post);
+    context.insert("posts".to_string(), json!(last_post));
 
     Template::render("index", &context)
 }

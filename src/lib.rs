@@ -1,14 +1,17 @@
 #![feature(plugin, custom_derive)]
 #![plugin(rocket_codegen)]
 
-extern crate serde;
+#[macro_use]
 extern crate serde_json;
-#[macro_use] extern crate serde_derive;
+#[macro_use]
+extern crate serde_derive;
+#[macro_use]
+extern crate diesel;
 
+extern crate serde;
 extern crate rocket;
 extern crate rocket_contrib;
 extern crate r2d2_diesel;
-#[macro_use] extern crate diesel;
 extern crate r2d2;
 extern crate dotenv;
 extern crate pulldown_cmark;
