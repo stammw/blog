@@ -26,6 +26,21 @@ pub struct UserCookie {
     name: String,
 }
 
+impl UserCookie {
+    pub fn context(cookie: &Self) -> HashMap<String, serde_json::Value> {
+        let mut context = HashMap::new();
+        context.insert("user".to_string(), json!(cookie));
+        context
+    }
+
+    pub fn context_or(cookie: &Option<Self>) -> HashMap<String, serde_json::Value> {
+        match cookie {
+            Some(c) => UserCookie::context(&c),
+            None    => HashMap::new(),
+        }
+    }
+}
+
 impl<'a, 'r> FromRequest<'a, 'r> for UserCookie {
     type Error = ();
 
