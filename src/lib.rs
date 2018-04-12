@@ -39,7 +39,12 @@ pub fn rocket() -> rocket::Rocket {
     rocket::ignite()
         .attach(Template::fairing())
         .manage(db::init_pool())
-        .mount("/", routes![post::index, login::get_form, login::auth_check])
-        .mount("/public/", routes![static_file])
+        .mount("/", routes![
+            post::index,
+            login::form_already_logged,
+            login::form,
+            login::auth_already_logged,
+            login::auth,
+        ]).mount("/public/", routes![static_file])
         .mount("/post/", routes![post::get, post::new, post::edit_new])
 }

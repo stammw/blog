@@ -30,7 +30,7 @@ impl NewPost {
 }
 
 impl Post {
-    pub fn format(mut self) -> Post {
+    pub fn to_html(mut self) -> Post {
         let to_format = self.body.to_owned();
         let parser = Parser::new(&to_format.as_str());
         self.body.truncate(0);
