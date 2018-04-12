@@ -1,10 +1,9 @@
-{{#> layout title="List Posts" user=user}}
+{{#> layout title="List Posts"}}
 {{#*inline "body-block"}}
 <div id="banner" class="page-header">
 	<h1>Digital Rodomontade</h1>
 	<p class="lead">A cool experience of building a small blogging app with Rocket.rs.</p>
 </div>
-<div>{{ user }}</div>
 {{#each posts}}
     <div class="bs-docs-section clearfix">
 	<h1><a href="post/{{ id }}">{{ title }}</a></h1>
