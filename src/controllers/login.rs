@@ -9,12 +9,6 @@ use rocket_contrib::Template;
 use serde_json::{self, Value};
 use serde_json::map::Map;
 
-#[derive(FromForm)]
-struct Login {
-    email: String,
-    password: String,
-}
-
 #[derive(Serialize, Deserialize)]
 pub struct UserCookie {
     id: u32,
@@ -68,6 +62,12 @@ impl<'a, 'r> FromRequest<'a, 'r> for UserCookie {
             None    => Outcome::Failure((Status::BadRequest, ())),
         }
     }
+}
+
+#[derive(FromForm)]
+struct Login {
+    email: String,
+    password: String,
 }
 
 #[get("/login")]
