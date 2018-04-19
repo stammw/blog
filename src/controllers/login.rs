@@ -16,10 +16,10 @@ pub struct UserCookie {
 }
 
 impl UserCookie {
-    pub fn create<'a>(id: u32, user_name: &str) -> Cookie<'a> {
+    pub fn create<'a>(id: u32, user_name: &'a str) -> Cookie<'a> {
         Cookie::build("user_id", json!({
                     "id": id,
-                    "name": user_name.to_owned(),
+                    "name": user_name,
                   }).to_string())
             .max_age(Duration::days(1))
             // .secure(true) // TODO uncomment once TLS is on
