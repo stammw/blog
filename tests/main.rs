@@ -11,6 +11,7 @@ use rocket::local::{Client, LocalResponse};
 use rocket::http::Method::*;
 use rocket::http::{Status, ContentType};
 use regex::Regex;
+use stammw_blog::controllers::login::UserCookie;
 
 macro_rules! dispatch {
     ($method:expr, $path:expr, $test_fn:expr) => ({
@@ -19,11 +20,12 @@ macro_rules! dispatch {
     })
 }
 
-macro_rules! dispatch_post {
+macro_rules! dispatch_user_post {
     ($path:expr, $data:expr, $test_fn:expr) => ({
         let client = Client::new(stammw_blog::rocket()).unwrap();
         $test_fn(&client, client.post($path)
                  .header(ContentType::Form)
+                 .cookie_private(UserCookie::create(1, "test_user"))
                  .body(&$data)
                  .dispatch());
     })
@@ -38,21 +40,23 @@ fn index_renders() {
 
 #[test]
 fn create_post() {
-    dispatch_post!("/post/new",
+    let test_response = |_, response: LocalResponse| {
+        assert_eq!(response.status(), Status::SeeOther);
+        let excepted_url = Regex::new(r"^/post/\d+$").unwrap();
+        let location = response.headers().get("Location").last(); 
+        assert!(location.is_some());
+        assert!(excepted_url.is_match(location.unwrap()));
+    };
+
+    dispatch_user_post!("/post/new",
         format!("body={}&title={}", "Body", "Title"),
-        |_, response: LocalResponse| {
-            assert_eq!(response.status(), Status::SeeOther);
-            let excepted_url = Regex::new(r"^/post/\d+$").unwrap();
-            let location = response.headers().get("Location").last(); 
-            assert!(location.is_some());
-            assert!(excepted_url.is_match(location.unwrap()));
-        }
+        test_response
     );
 }
 
 #[test]
 fn create_post_with_empty_title_fails() {
-    dispatch_post!("/post/new",
+    dispatch_user_post!("/post/new",
         format!("body={}&title={}", "Body", ""),
         |_, response: LocalResponse| {
             assert_eq!(response.status(), Status::Ok);
@@ -63,7 +67,7 @@ fn create_post_with_empty_title_fails() {
 #[test]
 fn gets_one_post() {
     let mut post_id = -1;
-    dispatch_post!("/post/new", format!("body={}&title={}", "Body", "Title"),
+    dispatch_user_post!("/post/new", format!("body={}&title={}", "Body", "Title"),
         |_, response: LocalResponse| {
             assert_eq!(response.status(), Status::SeeOther);
             let excepted = Regex::new(r"^/post/(\d+)$").unwrap();

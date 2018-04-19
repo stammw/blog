@@ -16,6 +16,16 @@ pub struct UserCookie {
 }
 
 impl UserCookie {
+    pub fn create<'a>(id: u32, user_name: &str) -> Cookie<'a> {
+        Cookie::build("user_id", json!({
+                    "id": id,
+                    "name": user_name.to_owned(),
+                  }).to_string())
+            .max_age(Duration::days(1))
+            // .secure(true) // TODO uncomment once TLS is on
+            .finish()
+    }
+
     pub fn context(cookie: &Self) -> HashMap<String, Value> {
         let mut context = HashMap::new();
         context.insert("user".to_string(), json!(cookie));
@@ -59,7 +69,7 @@ impl<'a, 'r> FromRequest<'a, 'r> for UserCookie {
 
         match cookie {
             Some(c) => Outcome::Success(c),
-            None    => Outcome::Failure((Status::BadRequest, ())),
+            None    => Outcome::Failure((Status::raw(401), ())),
         }
     }
 }
@@ -81,7 +91,7 @@ fn form() -> Template {
     Template::render("login", &context)
 }
 
-#[post("/login")]
+#[post("/login", rank = 1)]
 fn auth_already_logged(_user_cookie: UserCookie) -> Redirect {
         Redirect::to("/")
 }
@@ -91,13 +101,7 @@ fn auth(mut cookies: Cookies, login_form: Option<Form<Login>>) -> Redirect {
     let login = login_form.unwrap().into_inner();
 
     if login.email == "yep@yep.yep" && login.password == "yep" {
-        let cookie = Cookie::build("user_id", json!({
-                    "id": 1,
-                    "name": "stammw"
-                  }).to_string())
-            .max_age(Duration::days(1))
-            // .secure(true) // TODO uncomment once TLS is on
-            .finish();
+        let cookie = UserCookie::create(1, "stammw");
         cookies.add_private(cookie);
         Redirect::to("/")
     } else {

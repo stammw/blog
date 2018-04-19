@@ -4,8 +4,8 @@ version = "0.1.0"
 authors = ["Jean-Christophe BEGUE <jc.begue@devisubox.com>"]
 
 [dependencies]
-rocket = "0.3.6"
-rocket_codegen = "0.3.6"
+rocket = "0.3.8"
+rocket_codegen = "0.3.8"
 diesel = { version = "1.0.0", features = ["postgres"] }
 diesel_codegen = { version = "0.16.0", features = ["postgres"] }
 dotenv = "0.10.*"
