@@ -1,25 +1,60 @@
 #![feature(plugin)]
 #![plugin(rocket_codegen)]
 
+#[macro_use]
+extern crate diesel;
 extern crate serde_json;
 extern crate stammw_blog;
 extern crate rocket;
 extern crate rocket_contrib;
 extern crate regex;
 
-use rocket::local::{Client, LocalResponse};
+use diesel::prelude::*;
+use rocket::local::{Client, LocalRequest, LocalResponse};
 use rocket::http::Method::*;
 use rocket::http::{Status, ContentType};
+use rocket::request::FromRequest;
 use regex::Regex;
+use stammw_blog::db::Database;
+use stammw_blog::models::NewPost;
 use stammw_blog::controllers::login::UserCookie;
+use stammw_blog::schema::users::dsl::users;
+use stammw_blog::schema::posts::dsl::posts;
 
 #[macro_use]
 mod helpers;
 
 #[test]
 fn index_renders() {
-    dispatch!(Get, "/", |_, response: LocalResponse| {
+    let create_post = |request: &LocalRequest| {
+        let db = Database::from_request(&request.inner()).unwrap();
+        let post = NewPost {
+            title: "Test Post".to_string(),
+            body: "# Test post body\nempty".to_string(),
+            published: true,
+        };
+        diesel::insert_into(posts).values(&post).execute(&*db);
+    };
+
+    dispatch_request!(Get, "/", create_post,  |_, response: LocalResponse| {
         assert_eq!(response.status(), Status::Ok);
+    });
+}
+
+#[test]
+fn index_and_no_post_nor_users_redirects_to_create_user() {
+    let delete_all = |request: &LocalRequest| {
+        let db = Database::from_request(&request.inner()).unwrap();
+        diesel::delete(users).execute(&*db);
+        diesel::delete(posts).execute(&*db);
+    };
+
+    dispatch_request!(Get, "/", delete_all, |_, response: LocalResponse| {
+        assert_eq!(response.status(), Status::SeeOther);
+        assert_eq!(
+            response.headers().get("Location").last().unwrap(),
+            "/create_user"
+        ); 
     });
 }
 

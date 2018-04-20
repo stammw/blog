@@ -11,6 +11,15 @@ pub mod helpers{
         })
     }
 
+    macro_rules! dispatch_request {
+        ($method:expr, $path:expr, $req_fn:expr, $test_fn:expr) => ({
+            let client = Client::new(stammw_blog::rocket()).unwrap();
+            let req = client.req($method, $path);
+            $req_fn(&req);
+            $test_fn(&client, req.dispatch());
+        })
+    }
+
     macro_rules! dispatch_user_post {
         ($path:expr, $data:expr, $test_fn:expr) => ({
             let client = Client::new(stammw_blog::rocket()).unwrap();
