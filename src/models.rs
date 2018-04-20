@@ -38,3 +38,20 @@ impl Post {
         self
     }
 }
+
+#[derive(Queryable, Serialize, Deserialize, Clone, FromForm)]
+#[table_name="users"]
+pub struct User {
+    pub id: i32,
+    pub name: String,
+    pub email: String,
+    pub password: String,
+}
+
+#[derive(Insertable, Clone, FromForm)]
+#[table_name="users"]
+pub struct NewUser {
+    pub name: String,
+    pub email: String,
+    pub password: String,
+}
