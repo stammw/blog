@@ -6,11 +6,12 @@ use db;
 use login::UserCookie;
 use models::{NewPost, Post};
 use schema::posts::dsl::*;
+use schema::users::dsl::{users};
 use diesel::prelude::*;
 use diesel::insert_into;
 
 #[get("/")]
-fn index(db: db::Database, user_cookie: Option<UserCookie>) -> Template {
+fn index(db: db::Database, user_cookie: Option<UserCookie>) -> Result<Template, Redirect> {
     let mut context = UserCookie::context_or(&user_cookie);
 
     let last_post: Vec<Post> = posts.limit(50)
@@ -20,8 +21,15 @@ fn index(db: db::Database, user_cookie: Option<UserCookie>) -> Template {
         .map(|p| p.to_html())
         .collect();
 
+    if last_post.len() < 1 && user_cookie.is_none() {
+        let user: i64 = users.count().get_result(&*db).unwrap();
+        if user == 0 {
+            return Err(Redirect::to("/create_user"));
+        }
+    }
+
     context.insert("posts".to_string(), json!(last_post));
-    Template::render("index", &context)
+    Ok(Template::render("index", &context))
 }
 
 #[get("/<post_id>")]
