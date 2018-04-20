@@ -51,7 +51,7 @@ fn new(db: db::Database, _user_cookie: UserCookie, post_form: Option<Form<NewPos
         .expect("Failed to insert post");
 
     match post.validate() {
-        Ok(_)    => Ok(Redirect::to(format!("/post/{}", new_post.id).as_str())),
+        Ok(_)    => Ok(Redirect::to(format!("/post/{}", new_post.id))),
         Err(_) => Err(Template::render("edit_post", &new_post)),
     }
 }

@@ -4,9 +4,9 @@ version = "0.1.0"
 authors = ["Jean-Christophe BEGUE <jc.begue@devisubox.com>"]
 
 [dependencies]
-rocket = "0.3.8"
-rocket_codegen = "0.3.8"
-diesel = { version = "1.0.0", features = ["postgres"] }
+rocket = { version = "0.4.0-dev", path = "../Rocket/lib" }
+rocket_codegen = { version = "0.4.0-dev", path = "../Rocket/codegen" }
+diesel = { version = "1.2.2", features = ["postgres"] }
 diesel_codegen = { version = "0.16.0", features = ["postgres"] }
 dotenv = "0.10.*"
 r2d2-diesel = "1.0"
@@ -24,6 +24,7 @@ path = "src/main.rs"
 name = "digital_rodomontad"
 
 [dependencies.rocket_contrib]
-version = "0.3.6"
+version = "0.4.0-dev"
+path = "../Rocket/contrib"
 default-features = false
 features = ["handlebars_templates"]
