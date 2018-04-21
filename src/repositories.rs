@@ -1,9 +1,9 @@
 use db::Database;
+use diesel::prelude::*;
+use diesel::insert_into;
 use models::{Post,NewPost};
 use rocket::Request;
 use rocket::request::{FromRequest, Outcome};
-use diesel::prelude::*;
-use diesel::insert_into;
 use schema::posts::dsl::*;
 
 pub struct PostRepositoryImpl(Database);
@@ -37,6 +37,7 @@ impl PostRepository for PostRepositoryImpl {
             .expect("Failed to insert post")
     }
 }
+
 
 impl<'a, 'r> FromRequest<'a, 'r> for Box<PostRepository> {
     type Error = ();

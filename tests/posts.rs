@@ -20,6 +20,8 @@ use stammw_blog::models::{Post, NewPost};
 use stammw_blog::controllers::login::UserCookie;
 use stammw_blog::schema::users::dsl::users;
 use stammw_blog::schema::posts::dsl::posts;
+use stammw_blog::controllers;
+use stammw_blog::repositories::PostRepository;
 
 #[macro_use]
 mod helpers;
@@ -39,6 +41,21 @@ fn index_renders() {
     dispatch_request!(Get, "/", create_post,  |_, response: LocalResponse| {
         assert_eq!(response.status(), Status::Ok);
     });
+}
+
+struct PostRepositoryMock;
+
+impl PostRepository for PostRepositoryMock {
+    fn all(&self, _limit: i64) -> Vec<Post> { Vec::new() }
+    fn get(&self, _post_id: i32) -> Post { unimplemented!(); }
+    fn insert(&self, _post: &NewPost) -> Post { unimplemented!(); }
+}
+
+#[test]
+#[should_panic] // TODO should actually say 404
+fn get_nothing_when_no_post() {
+    let mocked_repo = Box::new(PostRepositoryMock);
+    controllers::post::get(mocked_repo, 0, None);
 }
 
 #[test]

@@ -26,7 +26,7 @@ fn index(post_repo: Box<PostRepository>, db: db::Database, user_cookie: Option<U
 }
 
 #[get("/<post_id>")]
-fn get(post_repo: Box<PostRepository>, post_id: i32, user_cookie: Option<UserCookie>) -> Template {
+pub fn get(post_repo: Box<PostRepository>, post_id: i32, user_cookie: Option<UserCookie>) -> Template {
     let mut context = UserCookie::context_or(&user_cookie);
 
     let post = post_repo.get(post_id);
