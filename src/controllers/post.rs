@@ -4,23 +4,16 @@ use rocket_contrib::Template;
 
 use db;
 use login::UserCookie;
-use models::{NewPost, Post};
-use schema::posts::dsl::*;
+use models::NewPost;
 use schema::users::dsl::{users};
 use diesel::prelude::*;
-use diesel::insert_into;
+use repositories::PostRepository;
 
 #[get("/")]
-fn index(db: db::Database, user_cookie: Option<UserCookie>) -> Result<Template, Redirect> {
+fn index(post_repo: PostRepository, db: db::Database, user_cookie: Option<UserCookie>) -> Result<Template, Redirect> {
     let mut context = UserCookie::context_or(&user_cookie);
 
-    let last_post: Vec<Post> = posts.limit(50)
-        .load::<Post>(&*db)
-        .expect("Error loading posts")
-        .into_iter()
-        .map(|p| p.to_html())
-        .collect();
-
+    let last_post = post_repo.all(50);
     if last_post.len() < 1 && user_cookie.is_none() {
         let user: i64 = users.count().get_result(&*db).unwrap();
         if user == 0 {
@@ -33,12 +26,10 @@ fn index(db: db::Database, user_cookie: Option<UserCookie>) -> Result<Template, 
 }
 
 #[get("/<post_id>")]
-fn get(db: db::Database, post_id: i32, user_cookie: Option<UserCookie>) -> Template {
+fn get(post_repo: PostRepository, post_id: i32, user_cookie: Option<UserCookie>) -> Template {
     let mut context = UserCookie::context_or(&user_cookie);
 
-    let post = posts.filter(id.eq(post_id))
-        .first::<Post>(&*db)
-        .expect("Error loading posts"); // TODO return 404
+    let post = post_repo.get(post_id);
 
     context.insert("post".to_string(), json!(post.to_html()));
     Template::render("post", context)
@@ -50,13 +41,10 @@ fn edit_new(user_cookie: UserCookie) -> Template {
 }
 
 #[post("/new", data = "<post_form>")]
-fn new(db: db::Database, _user_cookie: UserCookie, post_form: Option<Form<NewPost>>) -> Result<Redirect, Template> {
+fn new(post_repo: PostRepository, _user_cookie: UserCookie, post_form: Option<Form<NewPost>>) -> Result<Redirect, Template> {
     let post = post_form.unwrap().into_inner();
 
-    let new_post = insert_into(posts)
-        .values(&post)
-        .get_result::<Post>(&*db)
-        .expect("Failed to insert post");
+    let new_post = post_repo.insert(&post);
 
     match post.validate() {
         Ok(_)    => Ok(Redirect::to(format!("/post/{}", new_post.id))),

@@ -21,6 +21,7 @@ pub mod db;
 pub mod schema;
 pub mod models;
 pub mod controllers;
+pub mod repositories;
 
 use std::path::{Path, PathBuf};
 use rocket_contrib::Template;

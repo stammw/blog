@@ -1,7 +1,7 @@
 use schema::{posts, users};
 use pulldown_cmark::{html, Parser};
 
-#[derive(Queryable, Serialize, Deserialize, Clone, FromForm, Insertable)]
+#[derive(Queryable, Serialize, Deserialize, Clone, FromForm, Insertable, Debug)]
 #[table_name="posts"]
 pub struct Post {
     pub id: i32,

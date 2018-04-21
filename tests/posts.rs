@@ -67,7 +67,6 @@ fn index_and_no_post_nor_users_redirects_to_create_user() {
 
 #[test]
 fn create_post() {
-    panic!("panic");
     let test_response = |_, response: LocalResponse| {
         assert_eq!(response.status(), Status::SeeOther);
         let excepted_url = Regex::new(r"^/post/\d+$").unwrap();
