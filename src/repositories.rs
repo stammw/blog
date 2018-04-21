@@ -6,10 +6,16 @@ use diesel::prelude::*;
 use diesel::insert_into;
 use schema::posts::dsl::*;
 
-pub struct PostRepository(Database);
+pub struct PostRepositoryImpl(Database);
 
-impl PostRepository {
-    pub fn all(&self, limit: i64) -> Vec<Post> {
+pub trait PostRepository {
+    fn all(&self, limit: i64) -> Vec<Post>;
+    fn get(&self, post_id: i32) -> Post;
+    fn insert(&self, post: &NewPost) -> Post;
+}
+
+impl PostRepository for PostRepositoryImpl {
+    fn all(&self, limit: i64) -> Vec<Post> {
          posts.limit(limit)
             .load::<Post>(&*self.0)
             .expect("Error loading posts")
@@ -18,13 +24,13 @@ impl PostRepository {
             .collect()
     }
 
-    pub fn get(&self, post_id: i32) -> Post {
+    fn get(&self, post_id: i32) -> Post {
         posts.filter(id.eq(post_id))
             .first::<Post>(&*self.0)
             .expect("Error loading posts")
     }
 
-    pub fn insert(&self, post: &NewPost) -> Post {
+    fn insert(&self, post: &NewPost) -> Post {
         insert_into(posts)
             .values(post)
             .get_result::<Post>(&*self.0)
@@ -32,10 +38,11 @@ impl PostRepository {
     }
 }
 
-impl<'a, 'r> FromRequest<'a, 'r> for PostRepository {
+impl<'a, 'r> FromRequest<'a, 'r> for Box<PostRepository> {
     type Error = ();
 
-    fn from_request(request: &'a Request<'r>) -> Outcome<PostRepository, ()> {
-        Database::from_request(request).map(|d| PostRepository(d))
+    fn from_request(request: &'a Request<'r>) -> Outcome<Box<PostRepository>, ()> {
+        Database::from_request(request)
+            .map(|d| Box::new(PostRepositoryImpl(d)) as Box<PostRepository>)
     }
 }

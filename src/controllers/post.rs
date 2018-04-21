@@ -10,7 +10,7 @@ use diesel::prelude::*;
 use repositories::PostRepository;
 
 #[get("/")]
-fn index(post_repo: PostRepository, db: db::Database, user_cookie: Option<UserCookie>) -> Result<Template, Redirect> {
+fn index(post_repo: Box<PostRepository>, db: db::Database, user_cookie: Option<UserCookie>) -> Result<Template, Redirect> {
     let mut context = UserCookie::context_or(&user_cookie);
 
     let last_post = post_repo.all(50);
@@ -26,7 +26,7 @@ fn index(post_repo: PostRepository, db: db::Database, user_cookie: Option<UserCo
 }
 
 #[get("/<post_id>")]
-fn get(post_repo: PostRepository, post_id: i32, user_cookie: Option<UserCookie>) -> Template {
+fn get(post_repo: Box<PostRepository>, post_id: i32, user_cookie: Option<UserCookie>) -> Template {
     let mut context = UserCookie::context_or(&user_cookie);
 
     let post = post_repo.get(post_id);
@@ -41,7 +41,7 @@ fn edit_new(user_cookie: UserCookie) -> Template {
 }
 
 #[post("/new", data = "<post_form>")]
-fn new(post_repo: PostRepository, _user_cookie: UserCookie, post_form: Option<Form<NewPost>>) -> Result<Redirect, Template> {
+fn new(post_repo: Box<PostRepository>, _user_cookie: UserCookie, post_form: Option<Form<NewPost>>) -> Result<Redirect, Template> {
     let post = post_form.unwrap().into_inner();
 
     let new_post = post_repo.insert(&post);

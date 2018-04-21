@@ -1,5 +1,9 @@
+//#![cfg_attr(test, feature(proc_macro))]
 #![feature(plugin, custom_derive, decl_macro)]
 #![plugin(rocket_codegen)]
+
+#[cfg(test)]
+extern crate mocktopus;
 
 #[macro_use]
 extern crate serde_json;
