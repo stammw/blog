@@ -1,8 +1,8 @@
 #![feature(plugin)]
 #![plugin(rocket_codegen)]
 
-#[macro_use]
 extern crate diesel;
+#[macro_use]
 extern crate serde_json;
 extern crate stammw_blog;
 extern crate rocket;
@@ -16,7 +16,7 @@ use rocket::http::{Status, ContentType};
 use rocket::request::FromRequest;
 use regex::Regex;
 use stammw_blog::db::Database;
-use stammw_blog::models::NewPost;
+use stammw_blog::models::{Post, NewPost};
 use stammw_blog::controllers::login::UserCookie;
 use stammw_blog::schema::users::dsl::users;
 use stammw_blog::schema::posts::dsl::posts;
@@ -33,7 +33,7 @@ fn index_renders() {
             body: "# Test post body\nempty".to_string(),
             published: true,
         };
-        diesel::insert_into(posts).values(&post).execute(&*db);
+        diesel::insert_into(posts).values(&post).execute(&*db).unwrap();
     };
 
     dispatch_request!(Get, "/", create_post,  |_, response: LocalResponse| {
@@ -45,8 +45,15 @@ fn index_renders() {
 fn index_and_no_post_nor_users_redirects_to_create_user() {
     let delete_all = |request: &LocalRequest| {
         let db = Database::from_request(&request.inner()).unwrap();
-        diesel::delete(users).execute(&*db);
-        diesel::delete(posts).execute(&*db);
+        diesel::delete(users).execute(&*db).unwrap();
+        diesel::delete(posts).execute(&*db).unwrap();
+
+        let last_post: Vec<Post> = posts.limit(50)
+            .load::<Post>(&*db)
+            .expect("Error loading posts")
+            .into_iter()
+            .collect();
+        println!("All the DB: {}", json!(last_post))
     };
 
     dispatch_request!(Get, "/", delete_all, |_, response: LocalResponse| {
@@ -60,6 +67,7 @@ fn index_and_no_post_nor_users_redirects_to_create_user() {
 
 #[test]
 fn create_post() {
+    panic!("panic");
     let test_response = |_, response: LocalResponse| {
         assert_eq!(response.status(), Status::SeeOther);
         let excepted_url = Regex::new(r"^/post/\d+$").unwrap();
