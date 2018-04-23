@@ -26,6 +26,14 @@ use stammw_blog::repositories::PostRepository;
 #[macro_use]
 mod helpers;
 
+struct PostRepositoryMock;
+
+impl PostRepository for PostRepositoryMock {
+    fn all(&self, _limit: i64) -> Vec<Post> { Vec::new() }
+    fn get(&self, _post_id: i32) -> Option<Post> { None }
+    fn insert(&self, _post: &NewPost) -> Post { unimplemented!(); }
+}
+
 #[test]
 fn index_renders() {
     let create_post = |request: &LocalRequest| {
@@ -43,19 +51,11 @@ fn index_renders() {
     });
 }
 
-struct PostRepositoryMock;
-
-impl PostRepository for PostRepositoryMock {
-    fn all(&self, _limit: i64) -> Vec<Post> { Vec::new() }
-    fn get(&self, _post_id: i32) -> Post { unimplemented!(); }
-    fn insert(&self, _post: &NewPost) -> Post { unimplemented!(); }
-}
-
 #[test]
-#[should_panic] // TODO should actually say 404
-fn get_nothing_when_no_post() {
+fn get_not_found_when_no_post() {
     let mocked_repo = Box::new(PostRepositoryMock);
-    controllers::post::get(mocked_repo, 0, None);
+    let response = controllers::post::get(mocked_repo, 0, None);
+    assert!(response.is_err());
 }
 
 #[test]

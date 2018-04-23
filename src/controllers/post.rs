@@ -1,5 +1,6 @@
 use rocket::request::Form;
 use rocket::response::Redirect;
+use rocket::response::status::NotFound;
 use rocket_contrib::Template;
 
 use db;
@@ -26,13 +27,17 @@ fn index(post_repo: Box<PostRepository>, db: db::Database, user_cookie: Option<U
 }
 
 #[get("/<post_id>")]
-pub fn get(post_repo: Box<PostRepository>, post_id: i32, user_cookie: Option<UserCookie>) -> Template {
+pub fn get(post_repo: Box<PostRepository>, post_id: i32, user_cookie: Option<UserCookie>) -> Result<Template, NotFound<&'static str>> {
     let mut context = UserCookie::context_or(&user_cookie);
 
-    let post = post_repo.get(post_id);
+    match post_repo.get(post_id) {
+        Some(post) =>  {
+            context.insert("post".to_string(), json!(post.to_html()));
+            Ok(Template::render("post", context))
+        }
+        None => Err(NotFound("This article does not exists"))
+    }
 
-    context.insert("post".to_string(), json!(post.to_html()));
-    Template::render("post", context)
 }
 
 #[get("/new")]
