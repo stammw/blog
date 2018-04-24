@@ -69,7 +69,7 @@ impl<'a, 'r> FromRequest<'a, 'r> for UserCookie {
 
         match cookie {
             Some(c) => Outcome::Success(c),
-            None    => Outcome::Failure((Status::raw(401), ())),
+            None    => Outcome::Forward(()),
         }
     }
 }
@@ -80,7 +80,7 @@ struct Login {
     password: String,
 }
 
-#[get("/login")]
+#[get("/login", rank = 1)]
 fn form_already_logged(_user_cookie: UserCookie) -> Redirect {
         Redirect::to("/")
 }
