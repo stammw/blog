@@ -51,7 +51,6 @@ impl UserCookie {
                 Value::Object(object_ctx)
             }
         }
-
     }
 
     pub fn from_cookies(cookies: &mut Cookies) -> Option<UserCookie> {
