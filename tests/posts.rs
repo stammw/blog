@@ -14,14 +14,15 @@ use rocket::local::{Client, LocalRequest, LocalResponse};
 use rocket::http::Method::*;
 use rocket::http::{Status, ContentType};
 use rocket::request::FromRequest;
+use rocket::response::Redirect;
 use regex::Regex;
 use stammw_blog::db::Database;
-use stammw_blog::models::{Post, NewPost};
+use stammw_blog::models::{Post, NewPost, User, NewUser};
 use stammw_blog::controllers::login::UserCookie;
-use stammw_blog::schema::users::dsl::users;
 use stammw_blog::schema::posts::dsl::posts;
 use stammw_blog::controllers;
-use stammw_blog::repositories::PostRepository;
+use stammw_blog::repositories::post::PostRepository;
+use stammw_blog::repositories::user::UserRepository;
 
 #[macro_use]
 mod helpers;
@@ -32,6 +33,15 @@ impl PostRepository for PostRepositoryMock {
     fn all(&self, _limit: i64) -> Vec<Post> { Vec::new() }
     fn get(&self, _post_id: i32) -> Option<Post> { None }
     fn insert(&self, _post: &NewPost) -> Post { unimplemented!(); }
+}
+
+struct UserRepositoryMock;
+
+impl UserRepository for UserRepositoryMock {
+    fn all(&self) -> Vec<User> { unimplemented!(); }
+    fn get(&self, user_id: i32) -> Option<User> { unimplemented!(); }
+    fn insert(&self, user: &NewUser) -> User { unimplemented!(); }
+    fn count(&self) -> i64 { 0 }
 }
 
 #[test]
@@ -60,26 +70,14 @@ fn get_not_found_when_no_post() {
 
 #[test]
 fn index_and_no_post_nor_users_redirects_to_create_user() {
-    let delete_all = |request: &LocalRequest| {
-        let db = Database::from_request(&request.inner()).unwrap();
-        diesel::delete(users).execute(&*db).unwrap();
-        diesel::delete(posts).execute(&*db).unwrap();
+    let post_repo = Box::new(PostRepositoryMock);
+    let user_repo = Box::new(UserRepositoryMock);
 
-        let last_post: Vec<Post> = posts.limit(50)
-            .load::<Post>(&*db)
-            .expect("Error loading posts")
-            .into_iter()
-            .collect();
-        println!("All the DB: {}", json!(last_post))
-    };
+    let response = controllers::post::index(post_repo, user_repo, None);
 
-    dispatch_request!(Get, "/", delete_all, |_, response: LocalResponse| {
-        assert_eq!(response.status(), Status::SeeOther);
-        assert_eq!(
-            response.headers().get("Location").last().unwrap(),
-            "/create_user"
-        ); 
-    });
+    assert!(response.is_err());
+    let redirect = response.unwrap_err();
+    assert_eq!(redirect, Redirect{Status::Found, String::from("/create_user")));
 }
 
 #[test]
