@@ -1,3 +1,5 @@
 import 'bootstrap';
 import "app.scss";
-import "./prism";
+import hljs from "highlight.js";
+
+hljs.initHighlightingOnLoad();

@@ -20,6 +20,7 @@
     "bootstrap": "^4.0.0",
     "bootswatch": "^4.0.0",
     "handlebars": "^4.0.11",
+    "highlight.js": "^9.12.0",
     "node-sass": "^4.8.3",
     "popper.js": "^1.14.1"
   }
