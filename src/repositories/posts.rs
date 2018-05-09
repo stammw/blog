@@ -43,7 +43,6 @@ impl PostRepository for PostRepositoryImpl {
     }
 }
 
-
 impl<'a, 'r> FromRequest<'a, 'r> for Box<PostRepository> {
     type Error = ();
 

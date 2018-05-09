@@ -29,7 +29,7 @@ fn post_vec_can_be_serialied() {
         published: true
     },
     Post {
-        id: 1,
+        id: 2,
         title: "Title".to_string(),
         body: "Text".to_string(),
         published: true

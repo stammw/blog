@@ -21,7 +21,7 @@ use stammw_blog::controllers::login::UserCookie;
 use stammw_blog::schema::users::dsl::users;
 use stammw_blog::schema::posts::dsl::posts;
 use stammw_blog::controllers;
-use stammw_blog::repositories::PostRepository;
+use stammw_blog::repositories::posts::PostRepository;
 
 #[macro_use]
 mod helpers;

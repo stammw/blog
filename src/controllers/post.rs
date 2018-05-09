@@ -8,16 +8,17 @@ use login::UserCookie;
 use models::NewPost;
 use schema::users::dsl::{users};
 use diesel::prelude::*;
-use repositories::PostRepository;
+use repositories::posts::PostRepository;
+use repositories::users::UserRepository;
 
 #[get("/")]
-fn index(post_repo: Box<PostRepository>, db: db::Database, user_cookie: Option<UserCookie>) -> Result<Template, Redirect> {
+fn index(post_repo: Box<PostRepository>, user_repo: Box<UserRepository>, user_cookie: Option<UserCookie>)
+         -> Result<Template, Redirect> {
     let mut context = UserCookie::context_or(&user_cookie);
 
     let last_post = post_repo.all(50);
     if last_post.len() < 1 && user_cookie.is_none() {
-        let user: i64 = users.count().get_result(&*db).unwrap();
-        if user == 0 {
+        if user_repo.count() < 1 {
             return Err(Redirect::to("/create_user"));
         }
     }
