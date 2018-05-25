@@ -69,18 +69,6 @@ fn get_not_found_when_no_post() {
 }
 
 #[test]
-fn index_and_no_post_nor_users_redirects_to_create_user() {
-    let post_repo = Box::new(PostRepositoryMock);
-    let user_repo = Box::new(UserRepositoryMock);
-
-    let response = controllers::post::index(post_repo, user_repo, None);
-
-    assert!(response.is_err());
-    let redirect = response.unwrap_err();
-    assert_eq!(redirect, Redirect{Status::Found, String::from("/create_user")));
-}
-
-#[test]
 fn create_post() {
     let test_response = |_, response: LocalResponse| {
         assert_eq!(response.status(), Status::SeeOther);

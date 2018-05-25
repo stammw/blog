@@ -11,8 +11,8 @@ use serde_json::{self, Value};
 
 #[derive(Serialize, Deserialize)]
 pub struct UserCookie {
-    id: u32,
-    name: String,
+    pub id: u32,
+    pub name: String,
 }
 
 impl UserCookie {
