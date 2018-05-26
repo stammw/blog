@@ -6,11 +6,11 @@ use stammw_blog::models::Post;
 
 #[test]
 fn post_can_be_serialied() {
-    let post = Post{
+    let post = Post {
         id: 1,
         title: "Title".to_string(),
         body: "Text".to_string(),
-        published: true
+        published: true,
     };
 
     let serialized = serde_json::to_string(&post).unwrap();
@@ -21,20 +21,20 @@ fn post_can_be_serialied() {
 
 #[test]
 fn post_vec_can_be_serialied() {
-    let posts = vec! (
-    Post {
-        id: 1,
-        title: "Title".to_string(),
-        body: "Text".to_string(),
-        published: true
-    },
-    Post {
-        id: 2,
-        title: "Title".to_string(),
-        body: "Text".to_string(),
-        published: true
-    }
-    );
+    let posts = vec![
+        Post {
+            id: 1,
+            title: "Title".to_string(),
+            body: "Text".to_string(),
+            published: true,
+        },
+        Post {
+            id: 1,
+            title: "Title".to_string(),
+            body: "Text".to_string(),
+            published: true,
+        },
+    ];
 
     let serialized = serde_json::to_string(&posts).unwrap();
     println!("serialized = {}", serialized);

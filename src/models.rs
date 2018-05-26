@@ -1,8 +1,8 @@
-use schema::{posts, users};
 use pulldown_cmark::{html, Parser};
+use schema::{posts, users};
 
 #[derive(Queryable, Serialize, Deserialize, Clone, FromForm, Insertable, Debug)]
-#[table_name="posts"]
+#[table_name = "posts"]
 pub struct Post {
     pub id: i32,
     pub title: String,
@@ -11,7 +11,7 @@ pub struct Post {
 }
 
 #[derive(FromForm, Insertable)]
-#[table_name="posts"]
+#[table_name = "posts"]
 pub struct NewPost {
     pub title: String,
     pub body: String,
@@ -48,7 +48,7 @@ pub struct User {
 }
 
 #[derive(Insertable, FromForm)]
-#[table_name="users"]
+#[table_name = "users"]
 pub struct NewUser {
     pub name: String,
     pub email: String,

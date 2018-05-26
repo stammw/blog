@@ -16,10 +16,8 @@ use rocket::http::{Status, ContentType};
 use rocket::request::FromRequest;
 use regex::Regex;
 use stammw_blog::db::Database;
-use stammw_blog::models::{Post, NewPost};
-use stammw_blog::models::{User, NewUser};
+use stammw_blog::models::{Post, NewPost, User, NewUser};
 use stammw_blog::controllers::login::UserCookie;
-use stammw_blog::schema::users::dsl::users;
 use stammw_blog::schema::posts::dsl::posts;
 use stammw_blog::controllers;
 use stammw_blog::repositories::posts::PostRepository;
@@ -34,6 +32,15 @@ impl PostRepository for PostRepositoryMock {
     fn all(&self, _limit: i64) -> Vec<Post> { Vec::new() }
     fn get(&self, _post_id: i32) -> Option<Post> { None }
     fn insert(&self, _post: &NewPost) -> Post { unimplemented!(); }
+}
+
+struct UserRepositoryMock;
+
+impl UserRepository for UserRepositoryMock {
+    fn all(&self, _limit: i64) -> Vec<User> { Vec::new() }
+    fn get(&self, _user_id: i32) -> Option<User> { None }
+    fn insert(&self, _user: &NewUser) -> User { unimplemented!(); }
+    fn count(&self) -> i64 { 0 }
 }
 
 #[test]
@@ -58,15 +65,6 @@ fn get_not_found_when_no_post() {
     let mocked_repo = Box::new(PostRepositoryMock);
     let response = controllers::post::get(mocked_repo, 0, None);
     assert!(response.is_err());
-}
-
-struct UserRepositoryMock;
-
-impl UserRepository for UserRepositoryMock {
-    fn all(&self, _limit: i64) -> Vec<User> { Vec::new() }
-    fn get(&self, _user_id: i32) -> Option<User> { None }
-    fn insert(&self, _user: &NewUser) -> User { unimplemented!(); }
-    fn count(&self) -> i64 { 0 }
 }
 
 #[test]

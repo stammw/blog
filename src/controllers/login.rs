@@ -1,18 +1,18 @@
 use std::collections::HashMap;
 use time::Duration;
 
-use rocket::Outcome;
 use rocket::http::{Cookie, Cookies, Status};
 use rocket::request::{Form, FromRequest, Request};
 use rocket::response::Redirect;
+use rocket::Outcome;
 use rocket_contrib::Template;
-use serde_json::{self, Value};
 use serde_json::map::Map;
+use serde_json::{self, Value};
 
 #[derive(Serialize, Deserialize)]
 pub struct UserCookie {
-    id: u32,
-    name: String,
+    pub id: u32,
+    pub name: String,
 }
 
 impl UserCookie {
@@ -35,7 +35,7 @@ impl UserCookie {
     pub fn context_or(cookie: &Option<Self>) -> HashMap<String, Value> {
         match cookie {
             Some(c) => UserCookie::context(&c),
-            None    => HashMap::new(),
+            None => HashMap::new(),
         }
     }
 
@@ -44,7 +44,7 @@ impl UserCookie {
             Value::Object(mut obj) => {
                 obj.insert("user".to_string(), json!(self));
                 Value::Object(obj)
-            },
+            }
             _ => {
                 let mut object_ctx: Map<String, Value> = Map::new();
                 object_ctx.insert("data".to_string(), context);
@@ -54,7 +54,8 @@ impl UserCookie {
     }
 
     pub fn from_cookies(cookies: &mut Cookies) -> Option<UserCookie> {
-        cookies.get_private("user_id")
+        cookies
+            .get_private("user_id")
             .and_then(|cookie| cookie.value().parse().ok())
             .map(|json| serde_json::from_value(json).unwrap())
     }
@@ -81,7 +82,7 @@ struct Login {
 
 #[get("/login", rank = 1)]
 fn form_already_logged(_user_cookie: UserCookie) -> Redirect {
-        Redirect::to("/")
+    Redirect::to("/")
 }
 
 #[get("/login", rank = 2)]

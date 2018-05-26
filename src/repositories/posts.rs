@@ -1,4 +1,4 @@
-use db::{Pool,Database};
+use db::Database;
 use diesel::prelude::*;
 use diesel;
 use models::{Post,NewPost};
@@ -31,7 +31,7 @@ impl PostRepository for PostRepositoryImpl {
         match result {
             Ok(p) => Some(p),
             Err(diesel::NotFound) => None,
-            Err(e) => panic!("Failed to retreive one Post"),
+            Err(_) => panic!("Failed to retreive one Post"),
         }
     }
 

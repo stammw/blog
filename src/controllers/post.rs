@@ -1,13 +1,10 @@
 use rocket::request::Form;
-use rocket::response::Redirect;
 use rocket::response::status::NotFound;
+use rocket::response::Redirect;
 use rocket_contrib::Template;
 
-use db;
 use login::UserCookie;
 use models::NewPost;
-use schema::users::dsl::{users};
-use diesel::prelude::*;
 use repositories::posts::PostRepository;
 use repositories::users::UserRepository;
 
@@ -26,15 +23,19 @@ pub fn index(post_repo: Box<PostRepository>, user_repo: Box<UserRepository>, use
 }
 
 #[get("/<post_id>")]
-pub fn get(post_repo: Box<PostRepository>, post_id: i32, user_cookie: Option<UserCookie>) -> Result<Template, NotFound<&'static str>> {
+pub fn get(
+    post_repo: Box<PostRepository>,
+    post_id: i32,
+    user_cookie: Option<UserCookie>,
+) -> Result<Template, NotFound<&'static str>> {
     let mut context = UserCookie::context_or(&user_cookie);
 
     match post_repo.get(post_id) {
-        Some(post) =>  {
+        Some(post) => {
             context.insert("post".to_string(), json!(post.to_html()));
             Ok(Template::render("post", context))
         }
-        None => Err(NotFound("This article does not exists"))
+        None => Err(NotFound("This article does not exists")),
     }
 }
 
@@ -44,13 +45,17 @@ fn edit_new(user_cookie: UserCookie) -> Template {
 }
 
 #[post("/new", data = "<post_form>")]
-fn new(post_repo: Box<PostRepository>, _user_cookie: UserCookie, post_form: Option<Form<NewPost>>) -> Result<Redirect, Template> {
+fn new(
+    post_repo: Box<PostRepository>,
+    _user_cookie: UserCookie,
+    post_form: Option<Form<NewPost>>,
+) -> Result<Redirect, Template> {
     let post = post_form.unwrap().into_inner();
 
     let new_post = post_repo.insert(&post);
 
     match post.validate() {
-        Ok(_)    => Ok(Redirect::to(format!("/post/{}", new_post.id))),
+        Ok(_) => Ok(Redirect::to(format!("/post/{}", new_post.id))),
         Err(_) => Err(Template::render("edit_post", &new_post)),
     }
 }

@@ -1,23 +1,23 @@
 use db::Database;
-use diesel::prelude::*;
 use diesel;
-use models::{User,NewUser};
-use rocket::Request;
+use diesel::prelude::*;
+use models::{NewUser, User};
 use rocket::request::{FromRequest, Outcome};
+use rocket::Request;
 use schema::users::dsl::*;
 
 pub struct UserRepositoryImpl(Database);
 
 pub trait UserRepository {
-    fn all(&self, limit: i64) -> Vec<User>;
+    fn all(&self) -> Vec<User>;
     fn get(&self, user_id: i32) -> Option<User>;
     fn insert(&self, user: &NewUser) -> User;
     fn count(&self) -> i64;
 }
 
 impl UserRepository for UserRepositoryImpl {
-    fn all(&self, limit: i64) -> Vec<User> {
-         users.limit(limit)
+    fn all(&self) -> Vec<User> {
+        users
             .load::<User>(&*self.0)
             .expect("Error loading users")
             .into_iter()
@@ -25,8 +25,7 @@ impl UserRepository for UserRepositoryImpl {
     }
 
     fn get(&self, user_id: i32) -> Option<User> {
-        let result = users.filter(id.eq(user_id))
-            .first::<User>(&*self.0);
+        let result = users.filter(id.eq(user_id)).first::<User>(&*self.0);
 
         match result {
             Ok(p) => Some(p),
@@ -43,9 +42,10 @@ impl UserRepository for UserRepositoryImpl {
     }
 
     fn count(&self) -> i64 {
-         users.count()
+        users
+            .count()
             .get_result(&*self.0)
-            .expect("Error loading users")
+            .expect("Failed to count users")
     }
 }
 
