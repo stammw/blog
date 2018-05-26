@@ -12,15 +12,13 @@ use repositories::posts::PostRepository;
 use repositories::users::UserRepository;
 
 #[get("/")]
-fn index(post_repo: Box<PostRepository>, user_repo: Box<UserRepository>, user_cookie: Option<UserCookie>)
+pub fn index(post_repo: Box<PostRepository>, user_repo: Box<UserRepository>, user_cookie: Option<UserCookie>)
          -> Result<Template, Redirect> {
     let mut context = UserCookie::context_or(&user_cookie);
 
     let last_post = post_repo.all(50);
-    if last_post.len() < 1 && user_cookie.is_none() {
-        if user_repo.count() < 1 {
-            return Err(Redirect::to("/create_user"));
-        }
+    if last_post.len() < 1 && user_cookie.is_none() && user_repo.count() < 1 {
+        return Err(Redirect::to("/user/new"));
     }
 
     context.insert("posts".to_string(), json!(last_post));
@@ -38,7 +36,6 @@ pub fn get(post_repo: Box<PostRepository>, post_id: i32, user_cookie: Option<Use
         }
         None => Err(NotFound("This article does not exists"))
     }
-
 }
 
 #[get("/new")]

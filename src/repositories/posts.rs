@@ -1,4 +1,4 @@
-use db::Database;
+use db::{Pool,Database};
 use diesel::prelude::*;
 use diesel;
 use models::{Post,NewPost};

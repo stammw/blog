@@ -92,7 +92,7 @@ fn form() -> Template {
 
 #[post("/login", rank = 1)]
 fn auth_already_logged(_user_cookie: UserCookie) -> Redirect {
-        Redirect::to("/")
+    Redirect::to("/")
 }
 
 #[post("/login", data = "<login_form>", rank = 2)]

@@ -17,11 +17,13 @@ use rocket::request::FromRequest;
 use regex::Regex;
 use stammw_blog::db::Database;
 use stammw_blog::models::{Post, NewPost};
+use stammw_blog::models::{User, NewUser};
 use stammw_blog::controllers::login::UserCookie;
 use stammw_blog::schema::users::dsl::users;
 use stammw_blog::schema::posts::dsl::posts;
 use stammw_blog::controllers;
 use stammw_blog::repositories::posts::PostRepository;
+use stammw_blog::repositories::users::UserRepository;
 
 #[macro_use]
 mod helpers;
@@ -58,28 +60,23 @@ fn get_not_found_when_no_post() {
     assert!(response.is_err());
 }
 
+struct UserRepositoryMock;
+
+impl UserRepository for UserRepositoryMock {
+    fn all(&self, _limit: i64) -> Vec<User> { Vec::new() }
+    fn get(&self, _user_id: i32) -> Option<User> { None }
+    fn insert(&self, _user: &NewUser) -> User { unimplemented!(); }
+    fn count(&self) -> i64 { 0 }
+}
+
 #[test]
-fn index_and_no_post_nor_users_redirects_to_create_user() {
-    let delete_all = |request: &LocalRequest| {
-        let db = Database::from_request(&request.inner()).unwrap();
-        diesel::delete(users).execute(&*db).unwrap();
-        diesel::delete(posts).execute(&*db).unwrap();
+fn index_and_no_post_nor_users_redirects_to_create_user_mocked() {
+    let post_repo = Box::new(PostRepositoryMock);
+    let user_repo = Box::new(UserRepositoryMock);
 
-        let last_post: Vec<Post> = posts.limit(50)
-            .load::<Post>(&*db)
-            .expect("Error loading posts")
-            .into_iter()
-            .collect();
-        println!("All the DB: {}", json!(last_post))
-    };
-
-    dispatch_request!(Get, "/", delete_all, |_, response: LocalResponse| {
-        assert_eq!(response.status(), Status::SeeOther);
-        assert_eq!(
-            response.headers().get("Location").last().unwrap(),
-            "/create_user"
-        ); 
-    });
+    let result = controllers::post::index(post_repo, user_repo, None);
+    assert!(result.is_err());
+    // TODO : issue to Rocket assert_eq!(result.unwrap_err(), "/user/new");
 }
 
 #[test]
