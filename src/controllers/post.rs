@@ -9,7 +9,7 @@ use repositories::posts::PostRepository;
 use repositories::users::UserRepository;
 
 #[get("/")]
-pub fn index(post_repo: Box<PostRepository>, user_repo: Box<UserRepository>, user_cookie: Option<UserCookie>)
+pub fn index(post_repo: Box<PostRepository>, user_repo: UserRepository, user_cookie: Option<UserCookie>)
          -> Result<Template, Redirect> {
     let mut context = UserCookie::context_or(&user_cookie);
 

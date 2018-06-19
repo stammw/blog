@@ -47,7 +47,7 @@ impl<'a, 'r> FromRequest<'a, 'r> for Box<PostRepository> {
     type Error = ();
 
     fn from_request(request: &'a Request<'r>) -> Outcome<Box<PostRepository>, ()> {
-        Database::from_request(request)
+        request.guard::<Database>()
             .map(|d| Box::new(PostRepositoryImpl(d)) as Box<PostRepository>)
     }
 }
