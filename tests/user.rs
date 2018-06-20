@@ -54,12 +54,24 @@ fn user_repo_empty() -> UserRepository {
 #[test]
 fn create_fails_when_username_already_exists() {
     let client = client(user_repo_factory);
-    let res = client.post("/user/create")
+    let mut res = client.post("/user/create")
              .header(ContentType::Form)
              .private_cookie(UserCookie::create(1, "test_user"))
              .body("name=testuser&email=exists@domain.com&password=password")
              .dispatch();
     assert_eq!(res.status(), Status::raw(400));
+    assert!(res.body_string().unwrap().contains("already exists"));
+}
+
+#[test]
+fn new_users_errors_are_displayed() {
+    dispatch_user_post!("/user/create", "name=&email=&password=", |_, mut response: LocalResponse| {
+        assert_eq!(response.status(), Status::raw(400));
+        let mut content = String::new();
+        response.body().unwrap().into_inner()
+            .read_to_string(&mut content);
+        assert!(content.contains("Name shall not be empty"));
+    }) 
 }
 
 // #[test]
@@ -99,14 +111,3 @@ fn create_fails_when_username_already_exists() {
 //     let res = user::create(None, user_repo_empty(), None);
 //     assert!(res.is_ok());
 // }
-
-#[test]
-fn new_users_errors_are_displayed() {
-    dispatch_user_post!("/user/create", "name=&email=&password=", |_, mut response: LocalResponse| {
-        assert_eq!(response.status(), Status::raw(400));
-        let mut content = String::new();
-        response.body().unwrap().into_inner()
-            .read_to_string(&mut content);
-        assert!(content.contains("Name shall not be empty"));
-    }) 
-}

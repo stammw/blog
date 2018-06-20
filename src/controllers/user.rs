@@ -1,34 +1,44 @@
 use login::UserCookie;
 use models::NewUser;
 use repositories::users::UserRepository;
-use rocket::http::Status;
+use rocket::response::status::BadRequest;
 use rocket::request::Form;
 use rocket_contrib::Template;
 
-fn check_access(repo: &UserRepository, cookie: &Option<UserCookie>) -> Result<(), Status> {
+fn check_access(repo: &UserRepository, cookie: &Option<UserCookie>) -> Result<(), String> {
     match cookie {
         Some(_) => Ok(()),
         None if repo.count() < 1 => Ok(()),
-        None => Err(Status::new(403, "You cannot create users, sorry.")),
+        None => Err("You cannot create users, sorry.".to_string()),
     }
 }
 
 #[get("/new")]
-pub fn new(repo: UserRepository, cookie: Option<UserCookie>) -> Result<Template, Status> {
-    check_access(&repo, &cookie)?;
+pub fn new(repo: UserRepository, cookie: Option<UserCookie>) -> Result<Template, BadRequest<String>> {
+    match check_access(&repo, &cookie) {
+        Err(e) => {
+            return Err(BadRequest(None));
+        },
+        _ => (),
+    }
     Ok(Template::render("new", UserCookie::context_or(&cookie)))
 }
 
 #[post("/create", data = "<user_form>")]
-pub fn create(
-    user_form: Form<NewUser>,
-    repo: UserRepository,
-    cookie: Option<UserCookie>
-) -> Result<Template, Status> {
-    check_access(&repo, &cookie)?;
+pub fn create(user_form: Form<NewUser>, repo: UserRepository, cookie: Option<UserCookie>)
+              -> Result<Template, BadRequest<Template>> {
+    match check_access(&repo, &cookie) {
+        Err(e) => {
+            return Err(BadRequest(None));
+        },
+        _ => (),
+    }
     let user = user_form.get();
     if repo.get_by_name(&user.name).is_some() {
-        return Err(Status::raw(400));
+        let mut context = UserCookie::context_or(&cookie);
+        context.insert("error".into(), "user already exists".into());
+        let template = Template::render("user_new", context);
+        return Err(BadRequest(Some(template)));
     }
     Ok(Template::render("user_new", UserCookie::context_or(&cookie)))
 }

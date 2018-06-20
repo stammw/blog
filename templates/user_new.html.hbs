@@ -1,5 +1,22 @@
 {{#> layout title="Create a new user"}}
 {{#*inline "body-block"}}
-<h1>here, a new user would be created</h1>
+<form>
+    {{#if error}}
+	<div>{{error}}</div>
+    {{/if}}
+  <div class="form-group">
+    <label for="userInputName">Email address</label>
+    <input type="email" class="form-control" id="userInputName" placeholder="Enter username">
+  </div>
+  <div class="form-group">
+    <label for="userInputEmail">Email address</label>
+    <input type="email" class="form-control" id="userInputEmail" aria-describedby="emailHelp" placeholder="Enter email">
+  </div>
+  <div class="form-group">
+    <label for="userInputPassword">Password</label>
+    <input type="password" class="form-control" id="userInputPassword" placeholder="Password">
+  </div>
+  <button type="submit" class="btn btn-primary">Submit</button>
+</form>
 {{/inline}}
 {{/layout}}
