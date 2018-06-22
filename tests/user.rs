@@ -2,7 +2,6 @@ extern crate stammw_blog;
 extern crate rocket;
 extern crate rocket_contrib;
 
-use stammw_blog::controllers::user;
 use stammw_blog::controllers::login::UserCookie;
 use stammw_blog::models::{NewUser, User};
 use stammw_blog::repositories::users::{
@@ -28,7 +27,7 @@ impl UserRepositoryTrait for UserRepositoryMock {
     fn count(&self) -> i64 { self.users.len() as i64 }
 }
 
-fn user_repo_factory(db: Option<stammw_blog::db::Database>) -> UserRepository {
+fn user_repo_factory(_db: Option<stammw_blog::db::Database>) -> UserRepository {
     Box::new(UserRepositoryMock {
         users: vec![
             User {
@@ -55,23 +54,27 @@ fn user_repo_empty() -> UserRepository {
 fn create_fails_when_username_already_exists() {
     let client = client(user_repo_factory);
     let mut res = client.post("/user/create")
-             .header(ContentType::Form)
-             .private_cookie(UserCookie::create(1, "test_user"))
-             .body("name=testuser&email=exists@domain.com&password=password")
-             .dispatch();
+        .header(ContentType::Form)
+        .private_cookie(UserCookie::create(1, "test_user"))
+        .body("name=testuser&email=exists@domain.com&password=password")
+        .dispatch();
     assert_eq!(res.status(), Status::raw(400));
     assert!(res.body_string().unwrap().contains("already exists"));
 }
 
 #[test]
 fn new_users_errors_are_displayed() {
-    dispatch_user_post!("/user/create", "name=&email=&password=", |_, mut response: LocalResponse| {
-        assert_eq!(response.status(), Status::raw(400));
-        let mut content = String::new();
-        response.body().unwrap().into_inner()
-            .read_to_string(&mut content);
-        assert!(content.contains("Name shall not be empty"));
-    }) 
+    let client = client(user_repo_factory);
+    let mut response = client.post("/user/create")
+        .header(ContentType::Form)
+        .private_cookie(UserCookie::create(1, "test_user"))
+        .body("name=&email=@domain.com&password=")
+        .dispatch();
+    assert_eq!(response.status(), Status::raw(400));
+    let content = response.body_string().unwrap();
+    assert!(content.contains("Name shall not be empty"));
+    assert!(content.contains("Email is not valid"));
+    assert!(content.contains("Password should be at least 8 chars"));
 }
 
 // #[test]

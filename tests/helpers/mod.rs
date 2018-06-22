@@ -18,10 +18,12 @@ macro_rules! dispatch_request {
 }
 
 #[macro_export]
-macro_rules! dispatch_user_post {
-    ($path:expr, $data:expr, $test_fn:expr) => ({
-        let client = Client::new(stammw_blog::rocket()).unwrap();
-        $test_fn(&client, client.post($path)
+macro_rules! dispatch_post {
+    ($path:expr, $data:expr, $repo:expr, $test_fn:expr) => ({
+        let rocket = stammw_blog::rocket_stateless()
+                 .manage($repo);
+        let client = Client::new(rocket).unwrap();
+        $test_fn(client.post($path)
                  .header(ContentType::Form)
                  .private_cookie(UserCookie::create(1, "test_user"))
                  .body(&$data)

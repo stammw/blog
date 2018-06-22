@@ -27,18 +27,24 @@ pub fn new(repo: UserRepository, cookie: Option<UserCookie>) -> Result<Template,
 #[post("/create", data = "<user_form>")]
 pub fn create(user_form: Form<NewUser>, repo: UserRepository, cookie: Option<UserCookie>)
               -> Result<Template, BadRequest<Template>> {
-    match check_access(&repo, &cookie) {
-        Err(e) => {
-            return Err(BadRequest(None));
-        },
-        _ => (),
+    if let Err(_) = check_access(&repo, &cookie) {
+        return Err(BadRequest(None));
     }
+
+    let mut context = UserCookie::context_or(&cookie);
     let user = user_form.get();
+
+    if let Err(e) = user.validate() {
+        context.insert("error".into(), json!(e));
+        let template = Template::render("user_new", context);
+        return Err(BadRequest(Some(template)));
+    }
+
     if repo.get_by_name(&user.name).is_some() {
-        let mut context = UserCookie::context_or(&cookie);
         context.insert("error".into(), "user already exists".into());
         let template = Template::render("user_new", context);
         return Err(BadRequest(Some(template)));
     }
+
     Ok(Template::render("user_new", UserCookie::context_or(&cookie)))
 }

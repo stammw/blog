@@ -42,7 +42,6 @@ fn static_file(file: PathBuf) -> Option<NamedFile> {
 pub fn rocket_stateless() -> rocket::Rocket {
     rocket::ignite()
         .attach(Template::fairing())
-        .manage(db::init_pool())
         .mount(
             "/",
             routes![
@@ -61,4 +60,5 @@ pub fn rocket_stateless() -> rocket::Rocket {
 pub fn rocket() -> rocket::Rocket {
     rocket_stateless()
         .manage(UserRepositoryImpl::from)
+        .manage(db::init_pool())
 }

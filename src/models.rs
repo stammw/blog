@@ -68,10 +68,10 @@ impl NewUser {
             errors.insert("name", "Name shall not be empty");
         }
         if !EMAIL_REGEX.is_match(&self.email) {
-            errors.insert("email", "email is not valid");
+            errors.insert("email", "Email is not valid");
         }
         if self.password.len() < 8 {
-            errors.insert("password", "password should be at least 8 chars");
+            errors.insert("password", "Password should be at least 8 chars");
         }
         if ! errors.is_empty() {
            Err(errors) 
@@ -108,7 +108,7 @@ mod tests {
         let result = user.validate();
         assert!(result.is_err());
         assert_eq!(*result.unwrap_err().get("email").unwrap(),
-                   "email is not valid");
+                   "Email is not valid");
     }
     
     #[test]
@@ -117,6 +117,6 @@ mod tests {
         let result = user.validate();
         assert!(result.is_err());
         assert_eq!(*result.unwrap_err().get("password").unwrap(),
-                   "password should be at least 8 chars");
+                   "Password should be at least 8 chars");
     }
 }
