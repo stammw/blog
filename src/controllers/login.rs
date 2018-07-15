@@ -4,10 +4,18 @@ use time::Duration;
 use rocket::http::{Cookie, Cookies, Status};
 use rocket::request::{Form, FromRequest, Request};
 use rocket::response::Redirect;
+use rocket::State;
 use rocket::Outcome;
+use rocket::outcome::IntoOutcome;
 use rocket_contrib::Template;
 use serde_json::map::Map;
 use serde_json::{self, Value};
+use repositories::users::UserRepo;
+use auth::UserToken;
+use argon2rs::argon2i_simple;
+use Secret;
+
+use base64;
 
 #[derive(Serialize, Deserialize)]
 pub struct UserCookie {
@@ -74,6 +82,16 @@ impl<'a, 'r> FromRequest<'a, 'r> for UserCookie {
     }
 }
 
+impl<'a, 'r> FromRequest<'a, 'r> for UserToken {
+    type Error = ();
+
+    fn from_request(request: &'a Request<'r>) -> Outcome<UserToken, (Status, ()), ()> {
+        request.cookies().get("user")
+            .and_then(|encoded| UserToken::from_jwt(encoded.to_string()))
+            .or_forward(())
+    }
+}
+
 #[derive(FromForm)]
 struct Login {
     email: String,
@@ -97,14 +115,21 @@ fn auth_already_logged(_user_cookie: UserCookie) -> Redirect {
 }
 
 #[post("/login", data = "<login_form>", rank = 2)]
-fn auth(mut cookies: Cookies, login_form: Option<Form<Login>>) -> Redirect {
+fn auth(mut cookies: Cookies, login_form: Option<Form<Login>>, repo: UserRepo, secret: State<Secret>) -> Redirect {
     let login = login_form.unwrap().into_inner();
 
-    if login.email == "yep@yep.yep" && login.password == "yep" {
-        let cookie = UserCookie::create(1, "stammw");
-        cookies.add_private(cookie);
-        Redirect::to("/")
-    } else {
-        Redirect::to("/login")
+    match repo.get_by_email(&login.email) {
+        Some(ref user) => {
+            let password = argon2i_simple(&login.password, &secret.0);
+            let hashed = base64::encode(&password);
+            if hashed == user.password {
+                let jwt = UserToken { id: user.id, name: user.name.to_owned() }.to_jwt();
+                cookies.add(Cookie::new("user", jwt));
+                Redirect::to("/")
+            } else {
+                Redirect::to("/login")
+            }
+        },
+        _ => Redirect::to("/login"),
     }
 }

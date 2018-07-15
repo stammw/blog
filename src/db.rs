@@ -15,8 +15,13 @@ pub type Pool = r2d2::Pool<ConnectionManager<PgConnection>>;
 
 /// Initializes a database pool.
 pub fn init_pool() -> Pool {
-    dotenv().ok();
-    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    let database_url = match env::var("DATABASE_URL") {
+        Ok(url) => url,
+        Err(_) => {
+            dotenv().ok();
+            env::var("DATABASE_URL").expect("DATABASE_URL must be set")
+        }
+    };
 
     let manager = ConnectionManager::<PgConnection>::new(database_url.as_str());
     r2d2::Pool::new(manager).expect(&format!("Error connecting pool to {}", database_url))

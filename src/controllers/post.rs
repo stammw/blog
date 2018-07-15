@@ -6,10 +6,10 @@ use rocket_contrib::Template;
 use login::UserCookie;
 use models::NewPost;
 use repositories::posts::PostRepository;
-use repositories::users::UserRepository;
+use repositories::users::UserRepo;
 
 #[get("/")]
-pub fn index(post_repo: Box<PostRepository>, user_repo: UserRepository, user_cookie: Option<UserCookie>)
+pub fn index(post_repo: Box<PostRepository>, user_repo: UserRepo, user_cookie: Option<UserCookie>)
          -> Result<Template, Redirect> {
     let mut context = UserCookie::context_or(&user_cookie);
 
@@ -55,7 +55,7 @@ fn new(
     let new_post = post_repo.insert(&post);
 
     match post.validate() {
-        Ok(_) => Ok(Redirect::to(format!("/post/{}", new_post.id))),
+        Ok(_) => Ok(Redirect::to(format!("/post/{}", new_post.id).as_str())),
         Err(_) => Err(Template::render("edit_post", &new_post)),
     }
 }

@@ -1,11 +1,11 @@
 use login::UserCookie;
 use models::NewUser;
-use repositories::users::UserRepository;
+use repositories::users::UserRepo;
 use rocket::response::status::BadRequest;
 use rocket::request::Form;
 use rocket_contrib::Template;
 
-fn check_access(repo: &UserRepository, cookie: &Option<UserCookie>) -> Result<(), String> {
+fn check_access(repo: &UserRepo, cookie: &Option<UserCookie>) -> Result<(), String> {
     match cookie {
         Some(_) => Ok(()),
         None if repo.count() < 1 => Ok(()),
@@ -14,9 +14,9 @@ fn check_access(repo: &UserRepository, cookie: &Option<UserCookie>) -> Result<()
 }
 
 #[get("/new")]
-pub fn new(repo: UserRepository, cookie: Option<UserCookie>) -> Result<Template, BadRequest<String>> {
+pub fn new(repo: UserRepo, cookie: Option<UserCookie>) -> Result<Template, BadRequest<String>> {
     match check_access(&repo, &cookie) {
-        Err(e) => {
+        Err(_) => {
             return Err(BadRequest(None));
         },
         _ => (),
@@ -25,7 +25,7 @@ pub fn new(repo: UserRepository, cookie: Option<UserCookie>) -> Result<Template,
 }
 
 #[post("/create", data = "<user_form>")]
-pub fn create(user_form: Form<NewUser>, repo: UserRepository, cookie: Option<UserCookie>)
+pub fn create(user_form: Form<NewUser>, repo: UserRepo, cookie: Option<UserCookie>)
               -> Result<Template, BadRequest<Template>> {
     if let Err(_) = check_access(&repo, &cookie) {
         return Err(BadRequest(None));
@@ -40,7 +40,7 @@ pub fn create(user_form: Form<NewUser>, repo: UserRepository, cookie: Option<Use
         return Err(BadRequest(Some(template)));
     }
 
-    if repo.get_by_name(&user.name).is_some() {
+    if repo.get_by_email(&user.email).is_some() {
         context.insert("error".into(), "user already exists".into());
         let template = Template::render("user_new", context);
         return Err(BadRequest(Some(template)));

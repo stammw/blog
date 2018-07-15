@@ -39,5 +39,5 @@ fn post_vec_can_be_serialied() {
     let serialized = serde_json::to_string(&posts).unwrap();
     println!("serialized = {}", serialized);
     let value = to_value(posts).unwrap();
-    assert!(value.is_array());
+   assert!(value.is_array());
 }

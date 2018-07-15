@@ -41,7 +41,7 @@ impl Post {
     }
 }
 
-#[derive(Queryable, Serialize, Deserialize, Clone, FromForm)]
+#[derive(Queryable, Serialize, Deserialize, Clone, FromForm, Debug)]
 pub struct User {
     pub id: i32,
     pub name: String,
@@ -49,7 +49,7 @@ pub struct User {
     pub password: String,
 }
 
-#[derive(Insertable, FromForm)]
+#[derive(Insertable, FromForm, Clone, Debug)]
 #[table_name = "users"]
 pub struct NewUser {
     pub name: String,
