@@ -12,6 +12,7 @@ pub trait UserRepoTrait {
     fn all(&self, limit: i64) -> Vec<User>;
     fn get(&self, user_id: i32) -> Option<User>;
     fn get_by_email(&self, name: &str) -> Option<User>;
+    fn get_by_email_or_name(&self, user_email: &str, name: &str) -> Option<User>;
     fn insert(&self, user: &NewUser) -> User;
     fn count(&self) -> i64;
 }
@@ -43,6 +44,17 @@ impl UserRepoTrait for UserRepoImpl {
             Ok(p) => Some(p),
             Err(diesel::NotFound) => None,
             Err(_) => panic!("Failed to retreive one User"),
+        }
+    }
+
+    fn get_by_email_or_name(&self, user_email: &str, user_name: &str) -> Option<User> {
+        let result = users.filter(email.eq(user_email).or(user_name.eq(user_name)))
+            .first::<User>(&*self.db);
+
+        match result {
+            Ok(p) => Some(p),
+            Err(diesel::NotFound) => None,
+            Err(e) => panic!("Failed to retreive User by email: {}", e),
         }
     }
 

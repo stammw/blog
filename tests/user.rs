@@ -5,6 +5,8 @@ extern crate rocket_contrib;
 use rocket::local::Client;
 use rocket::http::{Status, ContentType};
 
+use stammw_blog::auth::UserToken;
+
 fn check_login(body: &str, location: &str, success: bool) {
     let rocket = stammw_blog::rocket();
     let client = Client::new(rocket).unwrap();
@@ -44,17 +46,19 @@ fn login_fails_empty_password() {
 fn login_fails_empty_email() {
     check_login("email=&password=password1", "/login", false);
 }
-// #[test]
-// fn create_fails_when_username_already_exists() {
-//     let client = client(user_repo_factory);
-//     let mut res = client.post("/user/create")
-//         .header(ContentType::Form)
-//         .private_cookie(UserCookie::create(1, "test_user"))
-//         .body("name=testuser&email=exists@domain.com&password=password")
-//         .dispatch();
-//     assert_eq!(res.status(), Status::raw(400));
-//     assert!(res.body_string().unwrap().contains("already exists"));
-// }
+
+#[test]
+fn create_fails_when_username_already_exists() {
+    let rocket = stammw_blog::rocket();
+    let client = Client::new(rocket).unwrap();
+    let mut res = client.post("/user/create")
+        .header(ContentType::Form)
+        .cookie(UserToken { id: 1, name: "user1".to_string() }.to_cookie())
+        .body("name=testuser&email=exists@domain.com&password=password")
+        .dispatch();
+    assert_eq!(res.status(), Status::raw(400));
+    assert!(res.body_string().unwrap().contains("already exists"));
+}
 
 // #[test]
 // fn new_users_errors_are_displayed() {

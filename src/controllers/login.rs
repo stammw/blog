@@ -1,96 +1,14 @@
-use std::collections::HashMap;
-use time::Duration;
-
-use rocket::http::{Cookie, Cookies, Status};
-use rocket::request::{Form, FromRequest, Request};
+use rocket::http::{Cookie, Cookies};
+use rocket::request::Form;
 use rocket::response::Redirect;
 use rocket::State;
-use rocket::Outcome;
-use rocket::outcome::IntoOutcome;
 use rocket_contrib::Template;
-use serde_json::map::Map;
-use serde_json::{self, Value};
 use repositories::users::UserRepo;
-use auth::UserToken;
+use auth::{ ForwardUserToken, UserToken };
 use argon2rs::argon2i_simple;
 use Secret;
 
 use base64;
-
-#[derive(Serialize, Deserialize)]
-pub struct UserCookie {
-    pub id: u32,
-    pub name: String,
-}
-
-impl UserCookie {
-    pub fn create<'a>(id: u32, user_name: &'a str) -> Cookie<'a> {
-        Cookie::build("user_id", json!({
-                    "id": id,
-                    "name": user_name,
-                  }).to_string())
-            .max_age(Duration::days(1))
-            // .secure(true) // TODO uncomment once TLS is on
-            .finish()
-    }
-
-    pub fn context(cookie: &Self) -> HashMap<String, Value> {
-        let mut context = HashMap::new();
-        context.insert("user".to_string(), json!(cookie));
-        context
-    }
-
-    pub fn context_or(cookie: &Option<Self>) -> HashMap<String, Value> {
-        match cookie {
-            Some(c) => UserCookie::context(&c),
-            None => HashMap::new(),
-        }
-    }
-
-    pub fn wrap(self, context: Value) -> Value {
-        match context {
-            Value::Object(mut obj) => {
-                obj.insert("user".to_string(), json!(self));
-                Value::Object(obj)
-            }
-            _ => {
-                let mut object_ctx: Map<String, Value> = Map::new();
-                object_ctx.insert("data".to_string(), context);
-                Value::Object(object_ctx)
-            }
-        }
-    }
-
-    pub fn from_cookies(cookies: &mut Cookies) -> Option<UserCookie> {
-        cookies
-            .get_private("user_id")
-            .and_then(|cookie| cookie.value().parse().ok())
-            .map(|json| serde_json::from_value(json).unwrap())
-    }
-}
-
-impl<'a, 'r> FromRequest<'a, 'r> for UserCookie {
-    type Error = ();
-
-    fn from_request(request: &'a Request<'r>) -> Outcome<UserCookie, (Status, ()), ()> {
-        let cookie = UserCookie::from_cookies(&mut request.cookies());
-
-        match cookie {
-            Some(c) => Outcome::Success(c),
-            None    => Outcome::Forward(()),
-        }
-    }
-}
-
-impl<'a, 'r> FromRequest<'a, 'r> for UserToken {
-    type Error = ();
-
-    fn from_request(request: &'a Request<'r>) -> Outcome<UserToken, (Status, ()), ()> {
-        request.cookies().get("user")
-            .and_then(|encoded| UserToken::from_jwt(encoded.to_string()))
-            .or_forward(())
-    }
-}
 
 #[derive(FromForm)]
 struct Login {
@@ -99,18 +17,17 @@ struct Login {
 }
 
 #[get("/login", rank = 1)]
-fn form_already_logged(_user_cookie: UserCookie) -> Redirect {
+fn form_already_logged(_user: ForwardUserToken) -> Redirect {
     Redirect::to("/")
 }
 
 #[get("/login", rank = 2)]
 fn form() -> Template {
-    let context: HashMap<String, String> = HashMap::new();
-    Template::render("login", &context)
+    Template::render("login", ())
 }
 
 #[post("/login", rank = 1)]
-fn auth_already_logged(_user_cookie: UserCookie) -> Redirect {
+fn auth_already_logged(_user: ForwardUserToken) -> Redirect {
     Redirect::to("/")
 }
 

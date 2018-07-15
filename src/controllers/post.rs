@@ -3,53 +3,36 @@ use rocket::response::status::NotFound;
 use rocket::response::Redirect;
 use rocket_contrib::Template;
 
-use login::UserCookie;
+use auth::UserToken;
 use models::NewPost;
 use repositories::posts::PostRepository;
 use repositories::users::UserRepo;
 
 #[get("/")]
-pub fn index(post_repo: Box<PostRepository>, user_repo: UserRepo, user_cookie: Option<UserCookie>)
+pub fn index(post_repo: Box<PostRepository>, _repo: UserRepo, _user: Option<UserToken>)
          -> Result<Template, Redirect> {
-    let mut context = UserCookie::context_or(&user_cookie);
-
     let last_post = post_repo.all(50);
-    if last_post.len() < 1 && user_cookie.is_none() && user_repo.count() < 1 {
-        return Err(Redirect::to("/user/new"));
-    }
-
-    context.insert("posts".to_string(), json!(last_post));
-    Ok(Template::render("index", &context))
+    Ok(Template::render("index", json!({ "posts": last_post })))
 }
 
 #[get("/<post_id>")]
-pub fn get(
-    post_repo: Box<PostRepository>,
-    post_id: i32,
-    user_cookie: Option<UserCookie>,
-) -> Result<Template, NotFound<&'static str>> {
-    let mut context = UserCookie::context_or(&user_cookie);
-
+pub fn get(post_repo: Box<PostRepository>, post_id: i32) -> Result<Template, NotFound<&'static str>> {
     match post_repo.get(post_id) {
         Some(post) => {
-            context.insert("post".to_string(), json!(post.to_html()));
-            Ok(Template::render("post", context))
+            Ok(Template::render("post", json!({ "post": post.to_html() })))
         }
         None => Err(NotFound("This article does not exists")),
     }
 }
 
 #[get("/new")]
-fn edit_new(user_cookie: UserCookie) -> Template {
-    Template::render("edit_post", UserCookie::context(&user_cookie))
+fn edit_new(_user: UserToken) -> Template {
+    Template::render("edit_post", ())
 }
 
 #[post("/new", data = "<post_form>")]
-fn new(
-    post_repo: Box<PostRepository>,
-    _user_cookie: UserCookie,
-    post_form: Option<Form<NewPost>>,
-) -> Result<Redirect, Template> {
+fn new(post_repo: Box<PostRepository>, _user: UserToken, post_form: Option<Form<NewPost>>)
+       -> Result<Redirect, Template> {
     let post = post_form.unwrap().into_inner();
 
     let new_post = post_repo.insert(&post);

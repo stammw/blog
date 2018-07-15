@@ -1,7 +1,13 @@
+use rocket::Outcome;
+use rocket::outcome::IntoOutcome;
+use rocket::request::{FromRequest, Request};
+use rocket::http::{Cookie, Status};
 use frank_jwt::{self, Algorithm};
+use time::Duration;
 use serde_json;
 
 static SECRET: &'static str = "todo_get_secret_from_conf";
+const COOKIE_NAME: &'static str = "user";
 
 #[derive(Serialize, Deserialize)]
 pub struct UserToken {
@@ -19,10 +25,45 @@ impl UserToken {
     pub fn from_jwt(jwt: String) -> Option<UserToken> {
         match frank_jwt::decode(&jwt, &SECRET.to_string(), Algorithm::HS256) {
             Ok((_, payload)) => Some(serde_json::from_value(payload).unwrap()),
-            Err(_) => None,
+            Err(e) => {
+                warn!("jwt {} failed {:?}", jwt, e);
+                None
+            },
+        
         }
     }
+    
+    pub fn to_cookie<'a>(self) -> Cookie<'a> {
+        Cookie::build(COOKIE_NAME, self.to_jwt())
+            .max_age(Duration::days(1))
+            // .secure(true) // TODO uncomment once TLS is on
+            .finish()
+    }
 }
+
+pub struct ForwardUserToken(UserToken);
+
+impl<'a, 'r> FromRequest<'a, 'r> for ForwardUserToken {
+    type Error = &'r str;
+
+    fn from_request(request: &'a Request<'r>) -> Outcome<ForwardUserToken, (Status, &'r str), ()> {
+        request.cookies().get(COOKIE_NAME)
+            .and_then(|cookie| UserToken::from_jwt(cookie.value().to_string()))
+            .map(|token| ForwardUserToken(token))
+            .or_forward(())
+    }
+}
+
+impl<'a, 'r> FromRequest<'a, 'r> for UserToken {
+    type Error = &'r str;
+
+    fn from_request(request: &'a Request<'r>) -> Outcome<UserToken, (Status, &'r str), ()> {
+        request.cookies().get(COOKIE_NAME)
+            .and_then(|cookie| UserToken::from_jwt(cookie.value().to_string()))
+            .into_outcome((Status::Unauthorized, "You must be logged to access this url"))
+    }
+}
+
 
 #[cfg(test)]
 mod tests {

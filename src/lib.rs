@@ -8,6 +8,7 @@ extern crate serde_derive;
 #[macro_use]
 extern crate diesel;
 #[macro_use] extern crate lazy_static;
+#[macro_use] extern crate log;
 
 extern crate dotenv;
 extern crate pulldown_cmark;
@@ -27,7 +28,7 @@ pub mod db;
 pub mod models;
 pub mod repositories;
 pub mod schema;
-mod auth;
+pub mod auth;
 
 use rocket::response::NamedFile;
 use rocket::fairing::AdHoc;
