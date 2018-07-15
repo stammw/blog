@@ -7,6 +7,7 @@ extern crate serde_json;
 extern crate serde_derive;
 #[macro_use]
 extern crate diesel;
+#[macro_use] extern crate lazy_static;
 
 extern crate dotenv;
 extern crate pulldown_cmark;
