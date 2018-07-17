@@ -40,7 +40,7 @@ fn auth(mut cookies: Cookies, login_form: Option<Form<Login>>, repo: UserRepo, s
             let password = argon2i_simple(&login.password, &secret.0);
             let hashed = base64::encode(&password);
             if hashed == user.password {
-                let jwt = UserToken { id: user.id, name: user.name.to_owned() }.to_jwt();
+                let jwt = UserToken { id: user.id, name: user.name.to_owned() }.to_jwt(&secret.0);
                 cookies.add(Cookie::new("user", jwt));
                 Redirect::to("/")
             } else {

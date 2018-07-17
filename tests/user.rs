@@ -49,11 +49,13 @@ fn login_fails_empty_email() {
 
 #[test]
 fn create_fails_when_username_already_exists() {
+    let secret = String::from("test_secret");
     let rocket = stammw_blog::rocket();
+
     let client = Client::new(rocket).unwrap();
     let mut res = client.post("/user/create")
         .header(ContentType::Form)
-        .cookie(UserToken { id: 1, name: "user1".to_string() }.to_cookie())
+        .cookie(UserToken { id: 1, name: "user1".to_string() }.to_cookie(&secret))
         .body("name=testuser&email=exists@domain.com&password=password")
         .dispatch();
     assert_eq!(res.status(), Status::raw(400));
