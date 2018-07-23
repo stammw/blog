@@ -48,7 +48,7 @@ impl UserRepoTrait for UserRepoImpl {
     }
 
     fn get_by_email_or_name(&self, user_email: &str, user_name: &str) -> Option<User> {
-        let result = users.filter(email.eq(user_email).or(user_name.eq(user_name)))
+        let result = users.filter(email.eq(user_email).or(name.eq(user_name)))
             .first::<User>(&*self.db);
 
         match result {

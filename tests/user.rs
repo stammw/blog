@@ -2,66 +2,88 @@ extern crate stammw_blog;
 extern crate rocket;
 extern crate rocket_contrib;
 
-use rocket::local::Client;
+use rocket::local::{LocalResponse, Client};
 use rocket::http::{Status, ContentType};
 
 use stammw_blog::auth::UserToken;
 
-#[test]
-fn create_fails_when_username_already_exists() {
+fn get<'r, F>(path: &str, login: bool, check: F)
+where F: for<'c, 's> Fn(&'c mut LocalResponse<'s>) {
     let secret = String::from("test_secret");
     let rocket = stammw_blog::rocket();
-
     let client = Client::new(rocket).unwrap();
-    let mut res = client.post("/user/create")
-        .header(ContentType::Form)
-        .cookie(UserToken { id: 1, name: "user1".to_string() }.to_cookie(&secret))
-        .body("name=testuser&email=exists@domain.com&password=password")
-        .dispatch();
-    assert_eq!(res.status(), Status::raw(400));
-    assert!(res.body_string().unwrap().contains("already exists"));
+    let mut req = client.get(path);
+
+    if login {
+       req = req.cookie(UserToken { id: 1, name: "user1".to_string() }.to_cookie(&secret));
+    }
+
+    check(&mut req.dispatch());
 }
 
-// #[test]
-// fn new_users_errors_are_displayed() {
-//     let client = client(user_repo_factory);
-//     let mut response = client.post("/user/create")
-//         .header(ContentType::Form)
-//         .private_cookie(UserCookie::create(1, "test_user"))
-//         .body("name=&email=@domain.com&password=")
-//         .dispatch();
-//     assert_eq!(response.status(), Status::raw(400));
-//     let content = response.body_string().unwrap();
-//     assert!(content.contains("Name shall not be empty"));
-//     assert!(content.contains("Email is not valid"));
-//     assert!(content.contains("Password should be at least 8 chars"));
-// }
+fn post<'r, F>(path: &str, body: &str, login: bool, check: F)
+where F: for<'c, 's> Fn(&'c mut LocalResponse<'s>) {
+    let secret = String::from("test_secret");
+    let rocket = stammw_blog::rocket();
+    let client = Client::new(rocket).unwrap();
+    let mut req = client.post(path).header(ContentType::Form);
 
-// #[test]
-// fn new_success_when_user_logged_in() {
-//     let cookie = Some(UserCookie { id: 1, name: String::from("testuser")});
-//     let res = user::new(user_repo(), cookie);
-//     assert!(res.is_ok());
-// }
+    if login {
+       req = req.cookie(UserToken { id: 1, name: "user1".to_string() }.to_cookie(&secret));
+    }
 
-// #[test]
-// fn new_fails_when_not_logged_in_and_some_user_exist() {
-//     let res = user::new(user_repo(), None);
-//     assert!(res.is_err());
-// }
+    check(&mut req.body(body).dispatch());
+}
 
-// #[test]
-// fn new_succes_when_not_logged_in_and_no_user_exist() {
-//     let res = user::new(user_repo_empty(), None);
-//     assert!(res.is_ok());
-// }
+#[test]
+fn new_users_errors_are_displayed() {
+    let body = "name=&email=fds&password=pword";
+    post("/user/create", body, true, |res| {
+        assert_eq!(res.status(), Status::raw(400));
+        let content = res.body_string().unwrap();
+        println!("{}", content);
+        assert!(content.contains("Name shall not be empty"));
+        assert!(content.contains("Email is not valid"));
+        assert!(content.contains("Password should be at least 8 chars"));
+    });
+}
 
-// #[test]
-// fn create_success_when_user_logged_in() {
-//     let cookie = Some(UserCookie { id: 1, name: String::from("testuser")});
-//     let res = user::create(new_user_form(), user_repo(), cookie);
-//     assert!(res.is_ok());
-// }
+#[test]
+fn new_success_when_user_logged_in() {
+    get("/user/new", false, |res| assert_eq!(res.status(), Status::raw(401)));
+}
+
+#[test]
+fn new_fails_when_not_logged_in_and_some_user_exist() {
+    get("/user/new", false, |res| assert_eq!(res.status(), Status::raw(401)));
+}
+
+#[test]
+fn create_fails_when_username_already_exists() {
+    let body = "name=user1&email=exists@domain.com&password=password";
+    post("/user/create", body, true, |res| {
+        assert_eq!(res.status(), Status::raw(400));
+        assert!(res.body_string().unwrap().contains("user name already exists"));
+    });
+}
+
+#[test]
+fn create_fails_when_email_already_exists() {
+    let body = "name=user1_does_not_exists&email=user1@email.test&password=password";
+    post("/user/create", body, true, |res| {
+        assert_eq!(res.status(), Status::raw(400));
+        assert!(res.body_string().unwrap().contains("email already exists"));
+    });
+}
+
+#[test]
+fn create_success_when_user_logged_in() {
+    let body = "name=create_success_when_user_logged_in\
+        &email=create_success_when_user_logged_in@dsfq.fqsd&password=password";
+    post("/user/create", body, true, |res| {
+        assert_eq!(res.status(), Status::Ok);
+    });
+}
 
 // #[test]
 // fn create_fails_when_not_logged_in_and_some_user_exist() {
