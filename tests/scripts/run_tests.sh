@@ -10,4 +10,4 @@ export PGPASSWORD=password
 diesel setup --database-url $DATABASE_URL
 docker exec -i blog_pg psql -Upostgres blog_test < $SCRIPT_DIR/test_db.sql
 
-RUST_BACKTRACE=1 cargo test
+RUST_BACKTRACE=1 cargo test $@
