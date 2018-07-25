@@ -5,8 +5,6 @@ extern crate rocket_contrib;
 use rocket::local::Client;
 use rocket::http::{Status, ContentType};
 
-use stammw_blog::auth::UserToken;
-
 fn check_login(body: &str, location: &str, success: bool) {
     let rocket = stammw_blog::rocket();
     let client = Client::new(rocket).unwrap();

@@ -21,13 +21,20 @@ pub struct NewPost {
 }
 
 impl NewPost {
-    pub fn validate(&self) -> Result<(), &'static str> {
+    pub fn validate(&self) -> Result<(), HashMap<&'static str, &'static str>> {
+        let mut errors = HashMap::new();
+        println!("validating {}, {}", self.title, self.body);
         if self.title.is_empty() {
-            return Err("Title shall not be emty");
-        } else if self.body.is_empty() {
-            return Err("Body shall not be emty");
+            errors.insert("title", "Title shall not be emty");
         }
-        Ok(())
+        if self.body.is_empty() {
+            errors.insert("body", "Body shall not be emty");
+        }
+        if ! errors.is_empty() {
+           Err(errors) 
+        } else {
+            Ok(())
+        }
     }
 }
 

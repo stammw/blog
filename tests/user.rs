@@ -2,38 +2,10 @@ extern crate stammw_blog;
 extern crate rocket;
 extern crate rocket_contrib;
 
-use rocket::local::{LocalResponse, Client};
-use rocket::http::{Status, ContentType};
+use rocket::http::Status;
 
-use stammw_blog::auth::UserToken;
-
-fn get<'r, F>(path: &str, login: bool, check: F)
-where F: for<'c, 's> Fn(&'c mut LocalResponse<'s>) {
-    let secret = String::from("test_secret");
-    let rocket = stammw_blog::rocket();
-    let client = Client::new(rocket).unwrap();
-    let mut req = client.get(path);
-
-    if login {
-       req = req.cookie(UserToken { id: 1, name: "user1".to_string() }.to_cookie(&secret));
-    }
-
-    check(&mut req.dispatch());
-}
-
-fn post<'r, F>(path: &str, body: &str, login: bool, check: F)
-where F: for<'c, 's> Fn(&'c mut LocalResponse<'s>) {
-    let secret = String::from("test_secret");
-    let rocket = stammw_blog::rocket();
-    let client = Client::new(rocket).unwrap();
-    let mut req = client.post(path).header(ContentType::Form);
-
-    if login {
-       req = req.cookie(UserToken { id: 1, name: "user1".to_string() }.to_cookie(&secret));
-    }
-
-    check(&mut req.body(body).dispatch());
-}
+mod helpers;
+use helpers::{get, post};
 
 #[test]
 fn new_users_errors_are_displayed() {
@@ -41,7 +13,6 @@ fn new_users_errors_are_displayed() {
     post("/user/create", body, true, |res| {
         assert_eq!(res.status(), Status::raw(400));
         let content = res.body_string().unwrap();
-        println!("{}", content);
         assert!(content.contains("Name shall not be empty"));
         assert!(content.contains("Email is not valid"));
         assert!(content.contains("Password should be at least 8 chars"));
@@ -84,15 +55,3 @@ fn create_success_when_user_logged_in() {
         assert_eq!(res.status(), Status::Ok);
     });
 }
-
-// #[test]
-// fn create_fails_when_not_logged_in_and_some_user_exist() {
-//     let res = user::create(None, user_repo(), None);
-//     assert!(res.is_err());
-// }
-
-// #[test]
-// fn create_succes_when_not_logged_in_and_no_user_exist() {
-//     let res = user::create(None, user_repo_empty(), None);
-//     assert!(res.is_ok());
-// }

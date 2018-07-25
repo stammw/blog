@@ -1,113 +1,40 @@
-#![feature(plugin)]
-#![plugin(rocket_codegen)]
+extern crate stammw_blog;
+extern crate rocket;
+extern crate rocket_contrib;
+extern crate regex;
 
-// extern crate diesel;
-// extern crate serde_json;
-// extern crate stammw_blog;
-// extern crate rocket;
-// extern crate rocket_contrib;
-// extern crate regex;
+use regex::Regex;
+use rocket::http::Status;
 
-// use diesel::prelude::*;
-// use rocket::local::{Client, LocalRequest, LocalResponse};
-// use rocket::http::Method::*;
-// use rocket::http::{Status, ContentType};
-// use rocket::request::FromRequest;
-// use regex::Regex;
-// use stammw_blog::db::Database;
-// use stammw_blog::models::{Post, NewPost, User, NewUser};
-// use stammw_blog::controllers::login::UserCookie;
-// use stammw_blog::schema::posts::dsl::posts;
-// use stammw_blog::controllers;
-// use stammw_blog::repositories::posts::PostRepository;
-// use stammw_blog::repositories::users::{UserRepositoryTrait, UserRepository};
+mod helpers;
+use helpers::{get,post};
 
-// #[macro_use]
-// mod helpers;
+#[test]
+fn index_renders() {
+    get("/", false, |res| assert_eq!(res.status(), Status::Ok));
+}
 
-// struct PostRepositoryMock;
+#[test]
+fn create_post_success() {
+    let body = "body=Body&title=sometitle";
+    post("/post/new", body, true, |res| {
+        assert_eq!(res.status(), Status::SeeOther);
+        let location = res.headers().get("Location")
+            .last().expect("Location is not set"); 
+        Regex::new(r"^/post/(\d+)$").unwrap()
+            .captures(location).unwrap()
+            .get(1).expect("location format invalid").as_str()
+            .parse::<i32>().expect("post_id is not a number");
+    });
+}
 
-// impl PostRepository for PostRepositoryMock {
-//     fn all(&self, _limit: i64) -> Vec<Post> { Vec::new() }
-//     fn get(&self, _post_id: i32) -> Option<Post> { None }
-//     fn insert(&self, _post: &NewPost) -> Post { unimplemented!(); }
-// }
-
-// struct UserRepositoryMock;
-
-// impl UserRepositoryMock {
-//     fn from(db: Option<Database>) -> UserRepository {
-//         Box::new(Self {}) as UserRepository   
-//     }
-// }
-
-// impl UserRepositoryTrait for UserRepositoryMock {
-//     fn all(&self, _limit: i64) -> Vec<User> { Vec::new() }
-//     fn get(&self, _user_id: i32) -> Option<User> { None }
-//     fn get_by_name(&self, name: &String) -> Option<User> { unimplemented!(); }
-//     fn insert(&self, _user: &NewUser) -> User { unimplemented!(); }
-//     fn count(&self) -> i64 { 0 }
-// }
-
-// #[test]
-// fn index_renders() {
-//     let create_post = |request: &LocalRequest| {
-//         let db = Database::from_request(&request.inner()).unwrap();
-//         let post = NewPost {
-//             title: "Test Post".to_string(),
-//             body: "# Test post body\nempty".to_string(),
-//             published: true,
-//         };
-//         diesel::insert_into(posts).values(&post).execute(&*db).unwrap();
-//     };
-
-//     dispatch_request!(Get, "/", create_post,  |_, response: LocalResponse| {
-//         assert_eq!(response.status(), Status::Ok);
-//     });
-// }
-
-// #[test]
-// fn get_not_found_when_no_post() {
-//     let mocked_repo = Box::new(PostRepositoryMock);
-//     let response = controllers::post::get(mocked_repo, 0, None);
-//     assert!(response.is_err());
-// }
-
-// #[test]
-// fn index_and_no_post_nor_users_redirects_to_create_user_mocked() {
-//     let post_repo = Box::new(PostRepositoryMock);
-//     let user_repo = Box::new(UserRepositoryMock);
-
-//     let result = controllers::post::index(post_repo, user_repo, None);
-//     assert!(result.is_err());
-//     // TODO : issue to Rocket assert_eq!(result.unwrap_err(), "/user/new");
-// }
-
-// #[test]
-// fn create_post() {
-//     let test_response = |_, response: LocalResponse| {
-//         assert_eq!(response.status(), Status::SeeOther);
-//         let excepted_url = Regex::new(r"^/post/\d+$").unwrap();
-//         let location = response.headers().get("Location").last(); 
-//         assert!(location.is_some());
-//         assert!(excepted_url.is_match(location.unwrap()));
-//     };
-
-//     dispatch_user_post!("/post/new",
-//         format!("body={}&title={}", "Body", "Title"),
-//         test_response
-//     );
-// }
-
-// #[test]
-// fn create_post_with_empty_title_fails() {
-//     dispatch_user_post!("/post/new",
-//         format!("body={}&title={}", "Body", ""),
-//         |_, response: LocalResponse| {
-//             assert_eq!(response.status(), Status::Ok);
-//         }
-//     );
-// }
+#[test]
+fn create_post_with_empty_title_fails() {
+    let body = "body=Body&title=";
+    post("/post/new", body, true, |res| {
+        assert_eq!(res.status(), Status::raw(400));
+    });
+}
 
 // #[test]
 // fn gets_one_post() {

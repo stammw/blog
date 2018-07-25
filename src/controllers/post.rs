@@ -1,5 +1,5 @@
 use rocket::request::Form;
-use rocket::response::status::NotFound;
+use rocket::response::status::{BadRequest, NotFound};
 use rocket::response::Redirect;
 use rocket_contrib::Template;
 
@@ -32,13 +32,13 @@ fn edit_new(_user: UserToken) -> Template {
 
 #[post("/new", data = "<post_form>")]
 fn new(post_repo: Box<PostRepository>, _user: UserToken, post_form: Option<Form<NewPost>>)
-       -> Result<Redirect, Template> {
+       -> Result<Redirect, BadRequest<Template>> {
     let post = post_form.unwrap().into_inner();
 
     let new_post = post_repo.insert(&post);
 
     match post.validate() {
         Ok(_) => Ok(Redirect::to(format!("/post/{}", new_post.id).as_str())),
-        Err(_) => Err(Template::render("edit_post", &new_post)),
+        Err(_) => Err(BadRequest(Some(Template::render("edit_post", &new_post)))),
     }
 }
