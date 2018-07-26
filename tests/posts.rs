@@ -16,7 +16,7 @@ fn index_renders() {
 
 #[test]
 fn create_post_success() {
-    let body = "body=Body&title=sometitle";
+    let body = "body=Body&title=sometitle%20of%20a%20post";
     post("/post/new", body, true, |res| {
         assert_eq!(res.status(), Status::SeeOther);
         let location = res.headers().get("Location")
@@ -36,24 +36,17 @@ fn create_post_with_empty_title_fails() {
     });
 }
 
-// #[test]
-// fn gets_one_post() {
-//     let mut post_id = -1;
+#[test]
+fn gets_one_post_by_id() {
+    get("/post/3", false, |res| {
+        assert_eq!(res.status(), Status::Ok);
+        assert!(res.body_string().unwrap().contains("<h1>body3</h1>"));
+    })
+}
 
-//     dispatch_user_post!("/post/new", format!("body={}&title={}", "Body", "Title"),
-//         |_, response: LocalResponse| {
-//             assert_eq!(response.status(), Status::SeeOther);
-//             let excepted = Regex::new(r"^/post/(\d+)$").unwrap();
-//             let location = response.headers().get("Location")
-//                 .last().unwrap(); 
-//             post_id = excepted.captures(location).unwrap()
-//                        .get(1).expect("post id not found in 'Location'")
-//                        .as_str().parse::<i32>().unwrap();
-//         }
-//     );
-//     dispatch!(Get, format!("/post/{}", post_id),
-//         |_, response: LocalResponse| {
-//             assert_eq!(response.status(), Status::Ok);
-//         }
-//     );
+// #[test]
+// fn gets_one_post_by_slug() {
+//     get("/post/my+shiny+post", false, |res| {
+//         assert_eq!(res.status(), Status::Ok);
+//     })
 // }

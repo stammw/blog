@@ -7,35 +7,19 @@ use schema::{posts, users};
 #[table_name = "posts"]
 pub struct Post {
     pub id: i32,
+    pub slug: String,
     pub title: String,
     pub body: String,
     pub published: bool,
 }
 
-#[derive(FromForm, Insertable)]
+#[derive(Insertable)]
 #[table_name = "posts"]
 pub struct NewPost {
     pub title: String,
+    pub slug: String,
     pub body: String,
     pub published: bool,
-}
-
-impl NewPost {
-    pub fn validate(&self) -> Result<(), HashMap<&'static str, &'static str>> {
-        let mut errors = HashMap::new();
-        println!("validating {}, {}", self.title, self.body);
-        if self.title.is_empty() {
-            errors.insert("title", "Title shall not be emty");
-        }
-        if self.body.is_empty() {
-            errors.insert("body", "Body shall not be emty");
-        }
-        if ! errors.is_empty() {
-           Err(errors) 
-        } else {
-            Ok(())
-        }
-    }
 }
 
 impl Post {

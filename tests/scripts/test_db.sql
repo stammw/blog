@@ -8,4 +8,6 @@ TRUNCATE TABLE posts;
 INSERT INTO posts VALUES
 (1, 'title1', 'body1', true),
 (2, 'title2', 'body2', true),
-(3, 'title3', 'body3', false);
+(3, 'title3', '# body3', false);
+
+SELECT * FROM users;

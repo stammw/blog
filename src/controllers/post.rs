@@ -1,7 +1,9 @@
+use std::collections::HashMap;
 use rocket::request::Form;
 use rocket::response::status::{BadRequest, NotFound};
 use rocket::response::Redirect;
 use rocket_contrib::Template;
+use slug;
 
 use auth::UserToken;
 use models::NewPost;
@@ -30,15 +32,49 @@ fn edit_new(_user: UserToken) -> Template {
     Template::render("edit_post", ())
 }
 
-#[post("/new", data = "<post_form>")]
-fn new(post_repo: Box<PostRepository>, _user: UserToken, post_form: Option<Form<NewPost>>)
-       -> Result<Redirect, BadRequest<Template>> {
-    let post = post_form.unwrap().into_inner();
+#[derive(FromForm, Serialize)]
+pub struct NewPostForm {
+    pub title: String,
+    pub body: String,
+}
 
-    let new_post = post_repo.insert(&post);
+impl NewPostForm {
+    pub fn validate(&self) -> Result<&NewPostForm, HashMap<&'static str, &'static str>> {
+        let mut errors = HashMap::new();
+        if self.title.is_empty() {
+            errors.insert("title", "Title shall not be emty");
+        }
+        if self.body.is_empty() {
+            errors.insert("body", "Body shall not be emty");
+        }
+        if ! errors.is_empty() {
+           Err(errors) 
+        } else {
+            Ok(self)
+        }
+    }
+
+    pub fn to_insertable(&self) -> NewPost {
+        NewPost {
+            slug: slug::slugify(&self.title),   
+            title: self.title.to_owned(),
+            body: self.body.to_owned(),
+            published: false,
+        }
+    }
+}
+
+
+#[post("/new", data = "<form>")]
+fn new(post_repo: Box<PostRepository>, _user: UserToken, form: Form<NewPostForm>)
+       -> Result<Redirect, BadRequest<Template>> {
+    let post = form.into_inner();
 
     match post.validate() {
-        Ok(_) => Ok(Redirect::to(format!("/post/{}", new_post.id).as_str())),
-        Err(_) => Err(BadRequest(Some(Template::render("edit_post", &new_post)))),
+        Ok(p) => {
+            let new_post = post_repo.insert(&p.to_insertable());
+            Ok(Redirect::to(format!("/post/{}", new_post.id).as_str()))
+        },
+        Err(_) => Err(BadRequest(Some(Template::render("edit_post", &post)))),
     }
 }

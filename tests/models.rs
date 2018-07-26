@@ -8,6 +8,7 @@ use stammw_blog::models::Post;
 fn post_can_be_serialied() {
     let post = Post {
         id: 1,
+        slug: "Title".to_string(),
         title: "Title".to_string(),
         body: "Text".to_string(),
         published: true,
@@ -24,12 +25,14 @@ fn post_vec_can_be_serialied() {
     let posts = vec![
         Post {
             id: 1,
+            slug: "Title".to_string(),
             title: "Title".to_string(),
             body: "Text".to_string(),
             published: true,
         },
         Post {
             id: 1,
+            slug: "Title".to_string(),
             title: "Title".to_string(),
             body: "Text".to_string(),
             published: true,
@@ -39,5 +42,5 @@ fn post_vec_can_be_serialied() {
     let serialized = serde_json::to_string(&posts).unwrap();
     println!("serialized = {}", serialized);
     let value = to_value(posts).unwrap();
-   assert!(value.is_array());
+    assert!(value.is_array());
 }

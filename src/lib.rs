@@ -22,6 +22,7 @@ extern crate time;
 extern crate regex;
 extern crate frank_jwt;
 extern crate argon2rs;
+extern crate slug;
 
 pub mod controllers;
 pub mod db;

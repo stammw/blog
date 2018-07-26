@@ -1,6 +1,7 @@
 table! {
     posts (id) {
         id -> Int4,
+        slug -> Varchar,
         title -> Varchar,
         body -> Text,
         published -> Bool,
@@ -16,4 +17,7 @@ table! {
     }
 }
 
-allow_tables_to_appear_in_same_query!(posts, users,);
+allow_tables_to_appear_in_same_query!(
+    posts,
+    users,
+);
