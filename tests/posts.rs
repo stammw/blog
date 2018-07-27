@@ -40,7 +40,8 @@ fn create_post_with_empty_title_fails() {
 fn gets_one_post_by_id() {
     get("/post/3", false, |res| {
         assert_eq!(res.status(), Status::Ok);
-        assert!(res.body_string().unwrap().contains("<h1>body3</h1>"));
+        let body = res.body_string().unwrap();
+        assert!(body.contains("<h1>body3</h1>"));
     })
 }
 
