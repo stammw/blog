@@ -5,20 +5,22 @@ use rocket::response::Redirect;
 use rocket_contrib::Template;
 use slug;
 
-use auth::UserToken;
+use auth::{ForwardUserToken, UserToken};
 use models::NewPost;
 use repositories::posts::PostRepository;
 use repositories::users::UserRepo;
 
 #[get("/")]
-pub fn index(post_repo: Box<PostRepository>, _repo: UserRepo, _user: Option<UserToken>)
+pub fn index(post_repo: Box<PostRepository>, _repo: UserRepo)
          -> Result<Template, Redirect> {
     let last_post = post_repo.all(50);
     Ok(Template::render("index", json!({ "posts": last_post })))
 }
 
 #[get("/<post_id>")]
-pub fn get(post_repo: Box<PostRepository>, post_id: i32) -> Result<Template, NotFound<&'static str>> {
+pub fn get(post_repo: Box<PostRepository>, post_id: i32, _user: ForwardUserToken)
+           -> Result<Template, NotFound<&'static str>> {
+    println!("get id {}", post_id);
     match post_repo.get(post_id) {
         Some(post) => {
             Ok(Template::render("post", json!({ "post": post.to_html() })))
@@ -28,7 +30,8 @@ pub fn get(post_repo: Box<PostRepository>, post_id: i32) -> Result<Template, Not
 }
 
 #[get("/<slug>", rank = 2)]
-pub fn get_by_slug(post_repo: Box<PostRepository>, slug: String) -> Result<Template, NotFound<&'static str>> {
+pub fn get_by_slug(post_repo: Box<PostRepository>, slug: String)
+                   -> Result<Template, NotFound<&'static str>> {
     match post_repo.get_by_slug(&slug) {
         Some(post) => {
             Ok(Template::render("post", json!({ "post": post.to_html() })))

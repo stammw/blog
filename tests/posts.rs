@@ -37,17 +37,32 @@ fn create_post_with_empty_title_fails() {
 }
 
 #[test]
-fn gets_one_post_by_id() {
-    get("/post/3", false, |res| {
-        assert_eq!(res.status(), Status::Ok);
-        let body = res.body_string().unwrap();
-        assert!(body.contains("<h1>body3</h1>"));
-    })
-}
-
-#[test]
 fn gets_one_post_by_slug() {
     get("/post/title2-the-second-post", false, |res| {
         assert_eq!(res.status(), Status::Ok);
     })
+}
+
+#[test]
+fn get_one_post_redenred() {
+    get("/post/title1", true, |res| {
+        assert_eq!(res.status(), Status::Ok);
+        let body = res.body_string().unwrap();
+        assert!(body.contains("<h1>body1</h1>"));
+    })
+}
+
+#[test]
+fn gets_one_post_by_slug_fails_when_not_published() {
+    get("/post/3", false, |res| {assert_eq!(res.status(), Status::NotFound)})
+}
+
+#[test]
+fn gets_one_post_by_id_success_when_not_published_and_logged() {
+    get("/post/3", true, |res| {assert_eq!(res.status(), Status::Ok)})
+}
+
+#[test]
+fn gets_one_post_by_id_fails_when_not_published_and_not_logged() {
+    get("/post/3", false, |res| {assert_eq!(res.status(), Status::NotFound)})
 }

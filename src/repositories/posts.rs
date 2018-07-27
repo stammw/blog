@@ -37,8 +37,10 @@ impl PostRepository for PostRepositoryImpl {
     }
 
     fn get_by_slug(&self, post_slug: &str) -> Option<Post> {
-        let result = posts.filter(slug.eq(post_slug))
-            .first::<Post>(&*self.0);
+        let result = posts.filter(
+            slug.eq(post_slug)
+                .and(published.eq(true))
+        ).first::<Post>(&*self.0);
 
         match result {
             Ok(p) => Some(p),
