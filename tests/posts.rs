@@ -21,10 +21,10 @@ fn create_post_success() {
         assert_eq!(res.status(), Status::SeeOther);
         let location = res.headers().get("Location")
             .last().expect("Location is not set"); 
-        Regex::new(r"^/post/(\d+)$").unwrap()
+        let slug = Regex::new(r"^/post/([\w-]+)$").unwrap()
             .captures(location).unwrap()
-            .get(1).expect("location format invalid").as_str()
-            .parse::<i32>().expect("post_id is not a number");
+            .get(1).expect("location format invalid").as_str();
+        assert_eq!(slug, "sometitle-of-a-post");
     });
 }
 
@@ -45,9 +45,9 @@ fn gets_one_post_by_id() {
     })
 }
 
-// #[test]
-// fn gets_one_post_by_slug() {
-//     get("/post/my+shiny+post", false, |res| {
-//         assert_eq!(res.status(), Status::Ok);
-//     })
-// }
+#[test]
+fn gets_one_post_by_slug() {
+    get("/post/title2-the-second-post", false, |res| {
+        assert_eq!(res.status(), Status::Ok);
+    })
+}

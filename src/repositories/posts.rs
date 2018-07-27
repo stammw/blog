@@ -11,6 +11,7 @@ pub struct PostRepositoryImpl(Database);
 pub trait PostRepository {
     fn all(&self, limit: i64) -> Vec<Post>;
     fn get(&self, post_id: i32) -> Option<Post>;
+    fn get_by_slug(&self, post_slug: &str) -> Option<Post>;
     fn insert(&self, post: &NewPost) -> Post;
 }
 
@@ -26,6 +27,17 @@ impl PostRepository for PostRepositoryImpl {
 
     fn get(&self, post_id: i32) -> Option<Post> {
         let result = posts.filter(id.eq(post_id))
+            .first::<Post>(&*self.0);
+
+        match result {
+            Ok(p) => Some(p),
+            Err(diesel::NotFound) => None,
+            Err(_) => panic!("Failed to retreive one Post"),
+        }
+    }
+
+    fn get_by_slug(&self, post_slug: &str) -> Option<Post> {
+        let result = posts.filter(slug.eq(post_slug))
             .first::<Post>(&*self.0);
 
         match result {

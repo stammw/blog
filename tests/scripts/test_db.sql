@@ -5,9 +5,11 @@ INSERT INTO users VALUES
 (3, 'user3', 'user3@email.test', 'password3');
 
 TRUNCATE TABLE posts;
-INSERT INTO posts VALUES
+INSERT INTO posts
+(id, title, slug, body, published)
+VALUES
 (1, 'title1', 'title1', 'body1', true),
-(2, 'title2', 'title2', 'body2', true),
+(2, 'title2: The second post', 'title2-the-second-post', 'body2', true),
 (3, 'title3', 'title3', '# body3', false);
 
 SELECT * FROM users;

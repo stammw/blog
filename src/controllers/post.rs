@@ -27,6 +27,16 @@ pub fn get(post_repo: Box<PostRepository>, post_id: i32) -> Result<Template, Not
     }
 }
 
+#[get("/<slug>", rank = 2)]
+pub fn get_by_slug(post_repo: Box<PostRepository>, slug: String) -> Result<Template, NotFound<&'static str>> {
+    match post_repo.get_by_slug(&slug) {
+        Some(post) => {
+            Ok(Template::render("post", json!({ "post": post.to_html() })))
+        }
+        None => Err(NotFound("This article does not exists")),
+    }
+}
+
 #[get("/new")]
 fn edit_new(_user: UserToken) -> Template {
     Template::render("edit_post", ())
@@ -73,7 +83,7 @@ fn new(post_repo: Box<PostRepository>, _user: UserToken, form: Form<NewPostForm>
     match post.validate() {
         Ok(p) => {
             let new_post = post_repo.insert(&p.to_insertable());
-            Ok(Redirect::to(format!("/post/{}", new_post.id).as_str()))
+            Ok(Redirect::to(format!("/post/{}", new_post.slug).as_str()))
         },
         Err(_) => Err(BadRequest(Some(Template::render("edit_post", &post)))),
     }
