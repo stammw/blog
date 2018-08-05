@@ -50,7 +50,7 @@ struct Secret(String);
 
 pub fn rocket() -> rocket::Rocket {
     rocket::ignite()
-        .attach(Template::fairing())
+        .attach(Template::custom(|_engine| println!("registering custom")))
         .manage(users::factory)
         .manage(db::init_pool())
         .mount(
@@ -63,9 +63,9 @@ pub fn rocket() -> rocket::Rocket {
                 login::auth,
             ],
         )
-        .mount("/public/", routes![static_file])
-        .mount("/post/", routes![post::get, post::get_by_slug, post::new, post::edit_new])
-        .mount("/user/", routes![user::new, user::create])
+        .mount("/public", routes![static_file])
+        .mount("/post", routes![post::get, post::get_by_slug, post::new, post::edit_new])
+        .mount("/user", routes![user::new, user::create])
         .attach(AdHoc::on_attach(|rocket| {
             println!("Adding token managed state from config...");
             let token_val = rocket.config().get_str("secret")

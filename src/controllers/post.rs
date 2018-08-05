@@ -11,30 +11,30 @@ use repositories::posts::PostRepository;
 use repositories::users::UserRepo;
 
 #[get("/")]
-pub fn index(post_repo: Box<PostRepository>, _repo: UserRepo)
+pub fn index(post_repo: Box<PostRepository>, repo: UserRepo, user: Option<UserToken>)
          -> Result<Template, Redirect> {
     let last_post = post_repo.all(50);
-    Ok(Template::render("index", json!({ "posts": last_post })))
+    Ok(Template::render("index", json!({ "user": user, "posts": last_post })))
 }
 
 #[get("/<post_id>")]
-pub fn get(post_repo: Box<PostRepository>, post_id: i32, _user: ForwardUserToken)
+pub fn get(post_repo: Box<PostRepository>, post_id: i32, user: ForwardUserToken)
            -> Result<Template, NotFound<&'static str>> {
     println!("get id {}", post_id);
     match post_repo.get(post_id) {
         Some(post) => {
-            Ok(Template::render("post", json!({ "post": post.to_html() })))
+            Ok(Template::render("post", json!({ "user": user.0, "post": post.to_html() })))
         }
         None => Err(NotFound("This article does not exists")),
     }
 }
 
 #[get("/<slug>", rank = 2)]
-pub fn get_by_slug(post_repo: Box<PostRepository>, slug: String)
+pub fn get_by_slug(post_repo: Box<PostRepository>, slug: String, user: Option<UserToken>)
                    -> Result<Template, NotFound<&'static str>> {
     match post_repo.get_by_slug(&slug) {
         Some(post) => {
-            Ok(Template::render("post", json!({ "post": post.to_html() })))
+            Ok(Template::render("post", json!({ "user": user, "post": post.to_html() })))
         }
         None => Err(NotFound("This article does not exists")),
     }
@@ -77,17 +77,20 @@ impl NewPostForm {
     }
 }
 
-
 #[post("/new", data = "<form>")]
-fn new(post_repo: Box<PostRepository>, _user: UserToken, form: Form<NewPostForm>)
+fn new(post_repo: Box<PostRepository>, user: UserToken, form: Form<NewPostForm>)
        -> Result<Redirect, BadRequest<Template>> {
     let post = form.into_inner();
 
     match post.validate() {
         Ok(p) => {
-            let new_post = post_repo.insert(&p.to_insertable());
-            Ok(Redirect::to(format!("/post/{}", new_post.slug).as_str()))
+            let insertable = &p.to_insertable();
+            println!("{:?}", insertable); 
+            let new_post = post_repo.insert(insertable);
+            Ok(Redirect::to(format!("/post/{}", new_post.slug)))
         },
-        Err(_) => Err(BadRequest(Some(Template::render("edit_post", &post)))),
+        Err(_) => Err(BadRequest(Some(Template::render(
+            "edit_post", json!({ "user": user, "post": &post})
+        )))),
     }
 }

@@ -57,7 +57,7 @@ impl<'a, 'r> FromRequest<'a, 'r> for UserToken {
     }
 }
 
-pub struct ForwardUserToken(UserToken);
+pub struct ForwardUserToken(pub UserToken);
 
 impl<'a, 'r> FromRequest<'a, 'r> for ForwardUserToken {
     type Error = &'r str;

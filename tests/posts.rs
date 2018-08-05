@@ -15,6 +15,14 @@ fn index_renders() {
 }
 
 #[test]
+fn index_display_user() {
+    get("/", true, |res| {
+        assert_eq!(res.status(), Status::Ok);
+        assert!(res.body_string().unwrap().contains("<li>user1</li>"));
+    });
+}
+
+#[test]
 fn create_post_success() {
     let body = "body=Body&title=sometitle%20of%20a%20post";
     post("/post/new", body, true, |res| {
