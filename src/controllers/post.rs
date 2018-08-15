@@ -49,6 +49,7 @@ fn edit_new(_user: UserToken) -> Template {
 pub struct NewPostForm {
     pub title: String,
     pub body: String,
+    pub published: bool,
 }
 
 impl NewPostForm {
@@ -69,10 +70,10 @@ impl NewPostForm {
 
     pub fn to_insertable(&self) -> NewPost {
         NewPost {
-            slug: slug::slugify(&self.title),   
             title: self.title.to_owned(),
+            slug: slug::slugify(&self.title),
             body: self.body.to_owned(),
-            published: false,
+            published: self.published,
         }
     }
 }
@@ -85,9 +86,12 @@ fn new(post_repo: Box<PostRepository>, user: UserToken, form: Form<NewPostForm>)
     match post.validate() {
         Ok(p) => {
             let insertable = &p.to_insertable();
-            println!("{:?}", insertable); 
             let new_post = post_repo.insert(insertable);
-            Ok(Redirect::to(format!("/post/{}", new_post.slug)))
+            if new_post.published {
+                Ok(Redirect::to(&format!("/post/{}", new_post.slug)))
+            } else {
+                Ok(Redirect::to(&format!("/post/{}", new_post.id)))
+            }
         },
         Err(_) => Err(BadRequest(Some(Template::render(
             "edit_post", json!({ "user": user, "post": &post})

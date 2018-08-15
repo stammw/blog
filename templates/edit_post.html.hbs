@@ -3,6 +3,14 @@
       <form method="POST" id="edit_post" action="/post/new">
 	  <ul>
 	      <li>title: <input type="text" name="title" /></li>
+              <input type="checkbox" id="published"
+                     value="published"
+                     {{#if published}}
+                     checked
+                     {{/if}}
+
+              />
+              <label for="published">Published</label>
 	      <li>body: <textarea id="edit_post" name="body" rows="10" cols="70"></textarea></li>
 	      <li><input type="submit" value="Create" /></li>
 	  </ul>

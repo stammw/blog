@@ -23,8 +23,8 @@ fn index_display_user() {
 }
 
 #[test]
-fn create_post_success() {
-    let body = "body=Body&title=sometitle%20of%20a%20post";
+fn create_post_success_location_slug_if_published() {
+    let body = "body=Body&title=sometitle%20of%20a%20post&published=true";
     post("/post/new", body, true, |res| {
         assert_eq!(res.status(), Status::SeeOther);
         let location = res.headers().get("Location")
@@ -33,6 +33,20 @@ fn create_post_success() {
             .captures(location).unwrap()
             .get(1).expect("location format invalid").as_str();
         assert_eq!(slug, "sometitle-of-a-post");
+    });
+}
+
+#[test]
+fn create_post_success_location_id_if_unpublished() {
+    let body = "body=Body&title=sometitle%20of%20another%20post&published=false";
+    post("/post/new", body, true, |res| {
+        assert_eq!(res.status(), Status::SeeOther);
+        let location = res.headers().get("Location")
+            .last().expect("Location is not set"); 
+        let id = Regex::new(r"^/post/(\d+)$").unwrap()
+            .captures(location).unwrap()
+            .get(1).expect("location format invalid").as_str();
+        assert!(id.parse::<u64>().unwrap() > 0);
     });
 }
 
