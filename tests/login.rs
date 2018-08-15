@@ -5,6 +5,9 @@ extern crate rocket_contrib;
 use rocket::local::Client;
 use rocket::http::{Status, ContentType};
 
+mod helpers;
+use helpers::post;
+
 fn check_login(body: &str, location: &str, success: bool) {
     let rocket = stammw_blog::rocket();
     let client = Client::new(rocket).unwrap();
@@ -14,13 +17,14 @@ fn check_login(body: &str, location: &str, success: bool) {
         .body(body)
         .dispatch();
 
-    assert_eq!(response.status(), Status::SeeOther);
-    assert_eq!(response.headers().get_one("Location"), Some(location));
     let cookie = response.headers().get_one("Set-Cookie");
     if success {
+        assert_eq!(response.status(), Status::SeeOther);
+        assert_eq!(response.headers().get_one("Location"), Some(location));
         assert!(cookie.is_some());
         assert_eq!(&cookie.unwrap()[..5], "user=");
     } else {
+        assert_eq!(response.status(), Status::Ok);
         assert!(cookie.is_none());
     }
 }
@@ -43,4 +47,13 @@ fn login_fails_empty_password() {
 #[test]
 fn login_fails_empty_email() {
     check_login("email=&password=password1", "/login", false);
+}
+
+#[test]
+fn user_email_stays_on_login_failure() {
+    let body = "email=i-should-stay-in-input&password=wrong";
+    post("/login", body, false, |res| {
+        assert_eq!(res.status(), Status::Ok);
+        assert!(res.body_string().unwrap().contains("i-should-stay-in-input"));
+    });
 }

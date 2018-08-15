@@ -1,4 +1,5 @@
 use rocket::http::{Cookie, Cookies};
+use rocket::http::Status;
 use rocket::request::Form;
 use rocket::response::Redirect;
 use rocket::State;
@@ -32,7 +33,8 @@ fn auth_already_logged(_user: ForwardUserToken) -> Redirect {
 }
 
 #[post("/login", data = "<login_form>", rank = 2)]
-fn auth(mut cookies: Cookies, login_form: Option<Form<Login>>, repo: UserRepo, secret: State<Secret>) -> Redirect {
+fn auth(mut cookies: Cookies, login_form: Option<Form<Login>>, repo: UserRepo, secret: State<Secret>)
+        -> Result<Redirect, Template>{
     let login = login_form.unwrap().into_inner();
 
     match repo.get_by_email(&login.email) {
@@ -42,11 +44,11 @@ fn auth(mut cookies: Cookies, login_form: Option<Form<Login>>, repo: UserRepo, s
             if hashed == user.password {
                 let jwt = UserToken { id: user.id, name: user.name.to_owned() }.to_jwt(&secret.0);
                 cookies.add(Cookie::new("user", jwt));
-                Redirect::to("/")
+                Ok(Redirect::to("/"))
             } else {
-                Redirect::to("/login")
+                Err(Template::render("login", json!({ "email": login.email })))
             }
         },
-        _ => Redirect::to("/login"),
+        _ => Err(Template::render("login", json!({ "email": login.email }))),
     }
 }
