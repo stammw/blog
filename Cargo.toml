@@ -34,12 +34,12 @@ features = ["postgres"]
 version = "0.16.1"
 
 [dependencies.rocket]
-version = "0.3.11"
+version = "0.3.0"
 
 [dependencies.rocket_codegen]
-version = "0.3.11"
+version = "0.3.0"
 
 [dependencies.rocket_contrib]
 default-features = false
 features = ["handlebars_templates"]
-version = "0.3.11"
+version = "0.3.0"

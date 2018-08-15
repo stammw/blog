@@ -50,7 +50,7 @@ struct Secret(String);
 
 pub fn rocket() -> rocket::Rocket {
     rocket::ignite()
-        .attach(Template::custom(|_engine| println!("registering custom")))
+        .attach(Template::fairing())
         .manage(users::factory)
         .manage(db::init_pool())
         .mount(
