@@ -24,7 +24,7 @@ fn check_login(body: &str, location: &str, success: bool) {
         assert!(cookie.is_some());
         assert_eq!(&cookie.unwrap()[..5], "user=");
     } else {
-        assert_eq!(response.status(), Status::Ok);
+        assert_eq!(response.status(), Status::Unauthorized);
         assert!(cookie.is_none());
     }
 }
@@ -53,7 +53,7 @@ fn login_fails_empty_email() {
 fn user_email_stays_on_login_failure() {
     let body = "email=i-should-stay-in-input&password=wrong";
     post("/login", body, false, |res| {
-        assert_eq!(res.status(), Status::Ok);
+        assert_eq!(res.status(), Status::Unauthorized);
         assert!(res.body_string().unwrap().contains("i-should-stay-in-input"));
     });
 }

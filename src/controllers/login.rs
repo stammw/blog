@@ -2,11 +2,13 @@ use rocket::http::{Cookie, Cookies};
 use rocket::http::Status;
 use rocket::request::Form;
 use rocket::response::Redirect;
+use rocket::response::status;
 use rocket::State;
 use rocket_contrib::Template;
 use repositories::users::UserRepo;
 use auth::{ ForwardUserToken, UserToken };
 use argon2rs::argon2i_simple;
+
 use Secret;
 
 use base64;
@@ -34,9 +36,16 @@ fn auth_already_logged(_user: ForwardUserToken) -> Redirect {
 
 #[post("/login", data = "<login_form>", rank = 2)]
 fn auth(mut cookies: Cookies, login_form: Option<Form<Login>>, repo: UserRepo, secret: State<Secret>)
-        -> Result<Redirect, Template>{
+        -> Result<Redirect, status::Custom<Template>>{
     let login = login_form.unwrap().into_inner();
 
+    let failure = || {
+        Err(status::Custom(
+            Status::Unauthorized,
+            Template::render("login", json!({ "email": login.email })))
+        )
+    };
+    
     match repo.get_by_email(&login.email) {
         Some(ref user) => {
             let password = argon2i_simple(&login.password, &secret.0);
@@ -46,9 +55,9 @@ fn auth(mut cookies: Cookies, login_form: Option<Form<Login>>, repo: UserRepo, s
                 cookies.add(Cookie::new("user", jwt));
                 Ok(Redirect::to("/"))
             } else {
-                Err(Template::render("login", json!({ "email": login.email })))
+                failure()
             }
         },
-        _ => Err(Template::render("login", json!({ "email": login.email }))),
+        _ => failure()
     }
 }
