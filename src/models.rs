@@ -3,7 +3,7 @@ use regex::Regex;
 use pulldown_cmark::{html, Parser};
 use schema::{posts, users};
 
-#[derive(Queryable, Serialize, Deserialize, Clone, FromForm, Insertable, Debug)]
+#[derive(Queryable, Serialize, Deserialize, Clone, FromForm, Insertable, Debug, AsChangeset, Identifiable)]
 #[table_name = "posts"]
 pub struct Post {
     pub id: i32,

@@ -64,7 +64,14 @@ pub fn rocket() -> rocket::Rocket {
             ],
         )
         .mount("/public", routes![static_file])
-        .mount("/post", routes![post::get, post::get_by_slug, post::new, post::edit_new])
+        .mount("/post", routes![
+            post::get,
+            post::get_by_slug,
+            post::new,
+            post::edit_new,
+            post::edit,
+            post::update,
+        ])
         .mount("/user", routes![user::new, user::create])
         .attach(AdHoc::on_attach(|rocket| {
             println!("Adding token managed state from config...");

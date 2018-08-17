@@ -13,6 +13,7 @@ pub trait PostRepository {
     fn get(&self, post_id: i32) -> Option<Post>;
     fn get_by_slug(&self, post_slug: &str) -> Option<Post>;
     fn insert(&self, post: &NewPost) -> Post;
+    fn update(&self, post: &Post) -> Post;
 }
 
 impl PostRepository for PostRepositoryImpl {
@@ -52,6 +53,13 @@ impl PostRepository for PostRepositoryImpl {
     fn insert(&self, post: &NewPost) -> Post {
         diesel::insert_into(posts)
             .values(post)
+            .get_result::<Post>(&*self.0)
+            .expect("Failed to insert post")
+    }
+
+    fn update(&self, post: &Post) -> Post {
+        diesel::update(posts.filter(id.eq(post.id)))
+            .set(post)
             .get_result::<Post>(&*self.0)
             .expect("Failed to insert post")
     }
