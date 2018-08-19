@@ -6,7 +6,7 @@ hljs.initHighlightingOnLoad();
 
 window.publish = function(elem) {
     var publishedInput = document.getElementById("published");
-    publishedInput.checked = true;
+    publishedInput.value = true;
     return true;
 }
 

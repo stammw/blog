@@ -31,7 +31,7 @@
                 {{else}}
 			    <li class="nav-item">
 				<form action="/login" method="GET">
-				    <input class="btn" type="submit" value="Login" />
+				    <input class="btn" type="submit" value="Login" onsubmit="return login(this)" />
 				</form>
 			    </li>
 			    <li>{{ user.name }}</li>
