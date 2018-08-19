@@ -21,13 +21,19 @@ pub fn index(post_repo: Box<PostRepository>, repo: UserRepo, user: Option<UserTo
     Ok(Template::render("index", json!({ "user": user, "posts": last_post })))
 }
 
+#[get("/list")]
+fn list(user: UserToken, post_repo: Box<PostRepository>)
+            -> Result<Template, NotFound<&'static str>> {
+    Ok(Template::render("post/list", json!({ "user": user, "posts": post_repo.all(50) })))
+}
+
 #[get("/<post_id>")]
 pub fn get(post_repo: Box<PostRepository>, post_id: i32, user: ForwardUserToken)
            -> Result<Template, NotFound<&'static str>> {
     println!("get id {}", post_id);
     match post_repo.get(post_id) {
         Some(post) => {
-            Ok(Template::render("post", json!({ "user": user.0, "post": post.to_html() })))
+            Ok(Template::render("post/display", json!({ "user": user.0, "post": post.to_html() })))
         }
         None => Err(NotFound("This article does not exists")),
     }
@@ -38,7 +44,7 @@ pub fn get_by_slug(post_repo: Box<PostRepository>, slug: String, user: Option<Us
                    -> Result<Template, NotFound<&'static str>> {
     match post_repo.get_by_slug(&slug) {
         Some(post) => {
-            Ok(Template::render("post", json!({ "user": user, "post": post.to_html() })))
+            Ok(Template::render("post/display", json!({ "user": user, "post": post.to_html() })))
         }
         None => Err(NotFound("This article does not exists")),
     }
@@ -46,7 +52,7 @@ pub fn get_by_slug(post_repo: Box<PostRepository>, slug: String, user: Option<Us
 
 #[get("/new")]
 fn edit_new(_user: UserToken) -> Template {
-    Template::render("edit_post", ())
+    Template::render("post/edit", ())
 }
 
 #[derive(FromForm, Serialize)]
@@ -108,7 +114,7 @@ fn new(post_repo: Box<PostRepository>, user: UserToken, form: Form<PostForm>)
             }
         },
         Err(_) => Err(BadRequest(Some(Template::render(
-            "edit_post", json!({ "user": user, "post": &post})
+            "post/edit", json!({ "user": user, "post": &post})
         )))),
     }
 }
@@ -118,7 +124,7 @@ fn edit(post_id: i32, user: UserToken, post_repo: Box<PostRepository>)
             -> Result<Template, NotFound<&'static str>> {
     match post_repo.get(post_id) {
         Some(post) => {
-            Ok(Template::render("edit_post", json!({ "user": user, "post": post })))
+            Ok(Template::render("post/edit", json!({ "user": user, "post": post })))
         }
         None => Err(NotFound("This article does not exists")),
     }
@@ -140,7 +146,7 @@ pub fn update(post_repo: Box<PostRepository>, post_id: i32, form: Form<PostForm>
             }
         },
         Err(_) => Err(BadRequest(Some(Template::render(
-            "edit_post", json!({ "user": user, "post": &post})
+            "post/edit", json!({ "user": user, "post": &post})
         )))),
     }
 }

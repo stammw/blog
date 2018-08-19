@@ -1,0 +1,27 @@
+{{#> layout title="Posts List"}}
+{{#*inline "body-block"}}
+<table class="table">
+    <thead>
+        <tr>
+            <th scope="col">title</th>
+            <th scope="col">published</th>
+            <th scope="col">actions</th>
+        </tr>
+    </thead>
+    {{#each posts}}
+        <tbody>
+            <tr>
+                <th scope="row">
+                    <a href="/post/{{ id }}/edit">{{ title }}</a>
+                </th>
+                <td><input type="checkbox" id="published-{{ id }}"
+                           {{#if published}}checked{{/if}}
+                    />
+                </td>
+                <td>remove</td>
+            </tr>
+    {{/each}}
+        </tbody>
+        </table>
+{{/inline}}
+{{/layout}}

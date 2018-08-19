@@ -5,6 +5,14 @@
 	<p class="lead">A cool experience of building a small blogging app with Rocket.rs.</p>
 </div>
 {{#each posts}}
+{{#each posts}}
+    <div class="bs-docs-section clearfix">
+	<h1><a href="post/{{ slug }}">{{ title }}</a></h1>
+	<p class="lead">
+	    {{{ body }}}
+	</p>
+    </div>
+{{/each}}
     <div class="bs-docs-section clearfix">
 	<h1><a href="post/{{ slug }}">{{ title }}</a></h1>
 	<p class="lead">

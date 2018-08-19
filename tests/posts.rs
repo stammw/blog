@@ -120,7 +120,7 @@ fn update_post_unpublished() {
 }
 
 #[test]
-fn cupdate_post_published() {
+fn update_post_published() {
     let body = "body=Body&title=sometitle%20of%20a%20twice%20updated%20post&published=true";
     post("/post/45", body, true, |res| {
         assert_eq!(res.status(), Status::SeeOther);
@@ -130,5 +130,24 @@ fn cupdate_post_published() {
             .captures(location).unwrap()
             .get(1).expect("location format invalid").as_str();
         assert_eq!(slug, "sometitle-of-a-twice-updated-post");
+    });
+}
+
+#[test]
+fn list_displays_all_posts() {
+    get("/post/list", true, |res| {
+        assert_eq!(res.status(), Status::Ok);
+        let body = res.body_string().unwrap();
+        assert!(body.contains("title1"));
+        assert!(body.contains("title2"));
+        assert!(body.contains("title3"));
+        assert!(body.contains("title45"));
+    });
+}
+
+#[test]
+fn list_needs_auth() {
+    get("/post/list", false, |res| {
+        assert_eq!(res.status(), Status::Unauthorized);
     });
 }
