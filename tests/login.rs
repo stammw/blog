@@ -6,7 +6,7 @@ use rocket::local::Client;
 use rocket::http::{Status, ContentType};
 
 mod helpers;
-use helpers::post;
+use helpers::{get, post};
 
 fn check_login(body: &str, location: &str, success: bool) {
     let rocket = stammw_blog::rocket();
@@ -56,4 +56,21 @@ fn user_email_stays_on_login_failure() {
         assert_eq!(res.status(), Status::Unauthorized);
         assert!(res.body_string().unwrap().contains("i-should-stay-in-input"));
     });
+}
+
+#[test]
+fn logout() {
+    get("/logout", true, |res| {
+        assert_eq!(res.status(), Status::SeeOther);
+        let cookie_header = res.headers().get_one("Set-Cookie");
+        assert!(cookie_header.unwrap().contains("user=; Max-Age=0;"));
+    })
+}
+
+#[test]
+fn logout_not_logged() {
+    get("/logout", false, |res| {
+        assert_eq!(res.status(), Status::SeeOther);
+        assert_eq!(res.headers().get_one("Location"), Some("/"));
+    })
 }

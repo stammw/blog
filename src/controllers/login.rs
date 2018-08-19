@@ -61,3 +61,11 @@ fn auth(mut cookies: Cookies, login_form: Option<Form<Login>>, repo: UserRepo, s
         _ => failure()
     }
 }
+
+#[get("/logout")]
+fn logout(user: Option<UserToken>, mut cookies: Cookies, secret: State<Secret>) -> Redirect {
+    if let Some(user) = user {
+        cookies.remove(user.to_cookie(&secret.0));
+    }
+    Redirect::to("/")
+}

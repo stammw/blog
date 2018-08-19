@@ -23,6 +23,18 @@
 				</form>
 			    </li>
 			    <li>{{ user.name }}</li>
+			    <li class="nav-item">
+				<form action="/logout" method="GET">
+				    <input class="btn" type="submit" value="Logout" />
+				</form>
+			    </li>
+                {{else}}
+			    <li class="nav-item">
+				<form action="/login" method="GET">
+				    <input class="btn" type="submit" value="Login" />
+				</form>
+			    </li>
+			    <li>{{ user.name }}</li>
 			{{/if}}
 		    </ul>
 		</div>

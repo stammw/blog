@@ -61,6 +61,7 @@ pub fn rocket() -> rocket::Rocket {
                 login::form,
                 login::auth_already_logged,
                 login::auth,
+                login::logout,
             ],
         )
         .mount("/public", routes![static_file])
