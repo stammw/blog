@@ -9,7 +9,7 @@ use schema::posts::dsl::*;
 pub struct PostRepositoryImpl(Database);
 
 pub trait PostRepository {
-    fn all(&self, limit: i64) -> Vec<Post>;
+    fn all_published(&self, limit: i64) -> Vec<Post>;
     fn get(&self, post_id: i32) -> Option<Post>;
     fn get_by_slug(&self, post_slug: &str) -> Option<Post>;
     fn insert(&self, post: &NewPost) -> Post;
@@ -17,13 +17,11 @@ pub trait PostRepository {
 }
 
 impl PostRepository for PostRepositoryImpl {
-    fn all(&self, limit: i64) -> Vec<Post> {
+    fn all_published(&self, limit: i64) -> Vec<Post> {
          posts.limit(limit)
+            .filter(published.eq(true))
             .load::<Post>(&*self.0)
             .expect("Error loading posts")
-            .into_iter()
-            .map(|p| p.to_html())
-            .collect()
     }
 
     fn get(&self, post_id: i32) -> Option<Post> {

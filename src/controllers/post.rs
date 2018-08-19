@@ -14,7 +14,10 @@ use repositories::users::UserRepo;
 #[get("/")]
 pub fn index(post_repo: Box<PostRepository>, repo: UserRepo, user: Option<UserToken>)
          -> Result<Template, Redirect> {
-    let last_post = post_repo.all(50);
+    let last_post: Vec<Post> = post_repo.all_published(50)
+        .into_iter()
+        .map(|p| p.to_html())
+        .collect();
     Ok(Template::render("index", json!({ "user": user, "posts": last_post })))
 }
 
