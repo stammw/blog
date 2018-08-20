@@ -151,3 +151,39 @@ fn list_needs_auth() {
         assert_eq!(res.status(), Status::Unauthorized);
     });
 }
+
+#[test]
+fn list_only_unpublished() {
+    get("/post/list?published=false", true, |res| {
+        assert_eq!(res.status(), Status::Ok);
+        let body = res.body_string().unwrap();
+        assert!(!body.contains("title1"));
+        assert!(!body.contains("title2"));
+        assert!(body.contains("title45"));
+        assert!(body.contains("title3"));
+    });
+}
+
+#[test]
+fn list_only_published() {
+    get("/post/list?published=true", true, |res| {
+        assert_eq!(res.status(), Status::Ok);
+        let body = res.body_string().unwrap();
+        assert!(body.contains("title1"));
+        assert!(body.contains("title2"));
+        assert!(!body.contains("title45"));
+        assert!(!body.contains("title3"));
+    });
+}
+
+#[test]
+fn list_no_params() {
+    get("/post/list?", true, |res| {
+        assert_eq!(res.status(), Status::Ok);
+        let body = res.body_string().unwrap();
+        assert!(body.contains("title1"));
+        assert!(body.contains("title2"));
+        assert!(body.contains("title45"));
+        assert!(body.contains("title3"));
+    });
+}

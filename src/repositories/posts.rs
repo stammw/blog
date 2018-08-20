@@ -9,7 +9,7 @@ use schema::posts::dsl::*;
 pub struct PostRepositoryImpl(Database);
 
 pub trait PostRepository {
-    fn all(&self, limit: i64) -> Vec<Post>;
+    fn all(&self, limit: i64, published_: Option<bool>) -> Vec<Post>;
     fn all_published(&self, limit: i64) -> Vec<Post>;
     fn get(&self, post_id: i32) -> Option<Post>;
     fn get_by_slug(&self, post_slug: &str) -> Option<Post>;
@@ -25,9 +25,14 @@ impl PostRepository for PostRepositoryImpl {
             .expect("Error loading posts")
     }
 
-    fn all(&self, limit: i64) -> Vec<Post> {
-         posts.limit(limit)
-            .load::<Post>(&*self.0)
+    fn all(&self, limit: i64, published_: Option<bool>) -> Vec<Post> {
+        let mut req = posts.limit(limit).into_boxed();
+
+        if let Some(published_) = published_ {
+            req = req.filter(published.eq(published_));
+        }
+
+        req.load::<Post>(&*self.0)
             .expect("Error loading posts")
     }
 

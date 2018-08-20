@@ -73,6 +73,7 @@ pub fn rocket() -> rocket::Rocket {
             post::edit,
             post::update,
             post::list,
+            post::list_params,
         ])
         .mount("/user", routes![user::new, user::create])
         .attach(AdHoc::on_attach(|rocket| {

@@ -8,20 +8,45 @@
             <th scope="col">actions</th>
         </tr>
     </thead>
-    {{#each posts}}
-        <tbody>
+    published = {{ params.published }}
+    <form class="form" id="list-form">
+        <select class="custom-select"
+                id="select-published"
+                onchange="return onSelectPublishedChange(this);"
+                name="published"
+                value="{{ params.published }}"
+        >
+            <option value="">Both</option>
+            <option value="true">Published</option>
+            <option value="false">Not published</option>
+        </select>
+    </form>
+    <tbody>
+        {{#each posts}}
             <tr>
                 <th scope="row">
                     <a href="/post/{{ id }}/edit">{{ title }}</a>
                 </th>
-                <td><input type="checkbox" id="published-{{ id }}"
+                <td>
+                    <input type="checkbox" id="published-{{ id }}"
                            {{#if published}}checked{{/if}}
                     />
                 </td>
                 <td>remove</td>
             </tr>
-    {{/each}}
-        </tbody>
-        </table>
+        {{/each}}
+    </tbody>
+</table>
+<script>
+ var selectPublished = document.getElementById("select-published");
+ var selectPublishedValue = "{{ params.published }}";
+ if (selectPublishedValue == "") {
+     selectPublished.value = "";
+ } else if (selectPublishedValue == "true") {
+     selectPublished.value = "true";
+ } else if (selectPublishedValue == "false") {
+     selectPublished.value = "false";
+ } // Let's keep this until a better understanding of JS flies by
+</script>
 {{/inline}}
 {{/layout}}

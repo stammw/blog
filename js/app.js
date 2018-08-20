@@ -10,3 +10,7 @@ window.publish = function(elem) {
     return true;
 }
 
+window.onSelectPublishedChange = function(elem) {
+    var listForm = document.getElementById("list-form");
+    listForm.submit()
+}

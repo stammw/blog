@@ -21,10 +21,30 @@ pub fn index(post_repo: Box<PostRepository>, repo: UserRepo, user: Option<UserTo
     Ok(Template::render("index", json!({ "user": user, "posts": last_post })))
 }
 
+#[derive(FromForm, Serialize)]
+struct ListParams {
+    pub published: Option<bool>,
+}
+
+impl Default for ListParams {
+    fn default() -> ListParams {
+        ListParams {
+            published: None,
+        }
+    }
+}
+
 #[get("/list")]
 fn list(user: UserToken, post_repo: Box<PostRepository>)
             -> Result<Template, NotFound<&'static str>> {
-    Ok(Template::render("post/list", json!({ "user": user, "posts": post_repo.all(50) })))
+    list_params(ListParams::default(), user, post_repo)
+}
+
+#[get("/list?<params>")]
+fn list_params(params: ListParams, user: UserToken, post_repo: Box<PostRepository>)
+            -> Result<Template, NotFound<&'static str>> {
+    let posts = post_repo.all(50, params.published);
+    Ok(Template::render("post/list", json!({ "user": user, "posts": posts, "params": params })))
 }
 
 #[get("/<post_id>")]
