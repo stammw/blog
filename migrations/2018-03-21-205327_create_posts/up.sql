@@ -3,5 +3,8 @@ CREATE TABLE posts (
   slug VARCHAR UNIQUE NOT NULL,
   title VARCHAR NOT NULL,
   body TEXT NOT NULL,
-  published BOOLEAN NOT NULL DEFAULT 'f'
+  published BOOLEAN NOT NULL DEFAULT 'f',
+  creation_date TIMESTAMP WITH TIME ZONE NOT NULL,
+  edition_date TIMESTAMP WITH TIME ZONE,
+  publication_date TIMESTAMP WITH TIME ZONE
 );

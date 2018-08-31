@@ -1,9 +1,11 @@
 use std::collections::HashMap;
 use regex::Regex;
 use pulldown_cmark::{html, Parser};
+use chrono::NaiveDateTime;
+
 use schema::{posts, users};
 
-#[derive(Queryable, Serialize, Deserialize, Clone, FromForm, Insertable, Debug, AsChangeset, Identifiable)]
+#[derive(Queryable, Serialize, Deserialize, Clone, Insertable, Debug, AsChangeset, Identifiable)]
 #[table_name = "posts"]
 pub struct Post {
     pub id: i32,
@@ -11,6 +13,9 @@ pub struct Post {
     pub title: String,
     pub body: String,
     pub published: bool,
+    pub creation_date: NaiveDateTime,
+    pub edition_date: Option<NaiveDateTime>,
+    pub publication_date: Option<NaiveDateTime>,
 }
 
 #[derive(Insertable, Debug)]
@@ -20,6 +25,7 @@ pub struct NewPost {
     pub slug: String,
     pub body: String,
     pub published: bool,
+    pub creation_date: NaiveDateTime,
 }
 
 impl Post {

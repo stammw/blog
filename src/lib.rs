@@ -11,6 +11,7 @@ extern crate diesel;
 #[macro_use] extern crate log;
 
 extern crate dotenv;
+extern crate chrono;
 extern crate pulldown_cmark;
 extern crate r2d2;
 extern crate r2d2_diesel;

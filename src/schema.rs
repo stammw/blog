@@ -5,6 +5,9 @@ table! {
         title -> Varchar,
         body -> Text,
         published -> Bool,
+        creation_date -> Timestamptz,
+        edition_date -> Nullable<Timestamptz>,
+        publication_date -> Nullable<Timestamptz>,
     }
 }
 

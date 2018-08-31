@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use chrono::Utc;
 use rocket::request::Form;
 use rocket::response::status::{BadRequest, NotFound};
 use rocket::response::Redirect;
@@ -97,25 +98,6 @@ impl PostForm {
             Ok(self)
         }
     }
-
-    pub fn to_insertable(&self) -> NewPost {
-        NewPost {
-            title: self.title.to_owned(),
-            slug: slug::slugify(&self.title),
-            body: self.body.to_owned(),
-            published: self.published,
-        }
-    }
-
-    pub fn to_model(&self, id: i32) -> Post {
-        Post {
-            id: id,
-            title: self.title.to_owned(),
-            slug: slug::slugify(&self.title),
-            body: self.body.to_owned(),
-            published: self.published,
-        }
-    }
 }
 
 #[post("/new", data = "<form>")]
@@ -123,19 +105,25 @@ fn new(post_repo: Box<PostRepository>, user: UserToken, form: Form<PostForm>)
        -> Result<Redirect, BadRequest<Template>> {
     let post = form.into_inner();
 
-    match post.validate() {
-        Ok(p) => {
-            let insertable = &p.to_insertable();
-            let new_post = post_repo.insert(insertable);
-            if new_post.published {
-                Ok(Redirect::to(&format!("/post/{}", new_post.slug)))
-            } else {
-                Ok(Redirect::to(&format!("/post/{}", new_post.id)))
-            }
-        },
-        Err(_) => Err(BadRequest(Some(Template::render(
+    if let Err(_) = post.validate() {
+        return Err(BadRequest(Some(Template::render(
             "post/edit", json!({ "user": user, "post": &post})
-        )))),
+        ))));
+    }
+
+    let post = NewPost {
+        title: post.title.to_owned(),
+        slug: slug::slugify(&post.title),
+        body: post.body.to_owned(),
+        published: post.published,
+        creation_date: Utc::now().naive_utc(),
+    };
+
+    let inserted = post_repo.insert(&post);
+    if inserted.published {
+        Ok(Redirect::to(&format!("/post/{}", inserted.slug)))
+    } else {
+        Ok(Redirect::to(&format!("/post/{}", inserted.id)))
     }
 }
 
@@ -155,18 +143,38 @@ pub fn update(post_repo: Box<PostRepository>, post_id: i32, form: Form<PostForm>
            -> Result<Redirect, BadRequest<Template>> {
     let post = form.into_inner();
 
-    match post.validate() {
-        Ok(p) => {
-            let post = p.to_model(post_id);
-            let post = post_repo.update(&post);
-            if post.published {
-                Ok(Redirect::to(&format!("/post/{}", post.slug)))
-            } else {
-                Ok(Redirect::to(&format!("/post/{}", post.id)))
-            }
-        },
-        Err(_) => Err(BadRequest(Some(Template::render(
+    if let Err(_e) = post.validate() {
+        return Err(BadRequest(Some(Template::render(
+            "post/edit", json!({ "user": user, "post": &post})
+        ))))
+    }
+
+    let existing_post = match post_repo.get(post_id) {
+        Some(p) => p,
+        None    => return Err(BadRequest(Some(Template::render(
             "post/edit", json!({ "user": user, "post": &post})
         )))),
+    };
+
+    let post = Post {
+        id: post_id,
+        slug: slug::slugify(post.title.to_owned()),
+        title: post.title,
+        body: post.body,
+        creation_date: existing_post.creation_date,
+        edition_date: Some(Utc::now().naive_utc()),
+        publication_date: match (existing_post.publication_date, post.published) {
+            (Some(date), _) => Some(date),
+            (None, true)    => Some(Utc::now().naive_utc()),
+            (None, false)   => None,
+        },
+        published: post.published,
+    };
+
+    let post = post_repo.update(&post);
+    if post.published {
+        Ok(Redirect::to(&format!("/post/{}", post.slug)))
+    } else {
+        Ok(Redirect::to(&format!("/post/{}", post.id)))
     }
 }
