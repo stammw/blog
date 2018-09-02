@@ -3,6 +3,8 @@ extern crate rocket;
 extern crate rocket_contrib;
 extern crate regex;
 extern crate stammw_blog;
+#[macro_use]
+extern crate lazy_static;
 
 use chrono::{Duration, Utc};
 use regex::Regex;
@@ -12,6 +14,21 @@ use stammw_blog::models::Post;
 
 mod helpers;
 use helpers::{get, post, post_req};
+
+lazy_static! {
+    static ref ID_REGEX: Regex   = Regex::new(r"^/post/(\d+)$").unwrap();
+    static ref SLUG_REGEX: Regex = Regex::new(r"^/post/([\w-]+)$").unwrap();
+}
+
+fn parse_location_id(location: &str) -> Option<i32> {
+    ID_REGEX.captures(location)?.get(1)?.as_str()
+        .parse::<i32>().ok()
+}
+
+fn parse_location_slug<'a>(location: &'a str) -> Option<&'a str> {
+    SLUG_REGEX.captures(location)?
+        .get(1).map(|c| c.as_str())
+}
 
 #[test]
 fn index_renders() {
@@ -33,9 +50,7 @@ fn create_post_success_location_slug_if_published() {
         assert_eq!(res.status(), Status::SeeOther);
         let location = res.headers().get("Location")
             .last().expect("Location is not set"); 
-        let slug = Regex::new(r"^/post/([\w-]+)$").unwrap()
-            .captures(location).unwrap()
-            .get(1).expect("location format invalid").as_str();
+        let slug = parse_location_slug(location).expect("invalid location");
         assert_eq!(slug, "sometitle-of-a-post");
     });
 }
@@ -47,10 +62,8 @@ fn create_post_success_location_id_if_unpublished() {
         assert_eq!(res.status(), Status::SeeOther);
         let location = res.headers().get("Location")
             .last().expect("Location is not set"); 
-        let id = Regex::new(r"^/post/(\d+)$").unwrap()
-            .captures(location).unwrap()
-            .get(1).expect("location format invalid").as_str();
-        assert!(id.parse::<u64>().unwrap() > 0);
+        let id = parse_location_id(location).expect("invalid location");
+        assert!(id > 0);
     });
 }
 
@@ -115,11 +128,8 @@ fn update_post_unpublished() {
         assert_eq!(res.status(), Status::SeeOther);
         let location = res.headers().get("Location")
             .last().expect("Location is not set"); 
-        let id = Regex::new(r"^/post/(\d+)$").unwrap()
-            .captures(location).unwrap()
-            .get(1).expect("location format invalid").as_str();
-        assert_eq!(id, "45");
-        // assert_eq!(slug, "sometitle-of-an-updated-post");
+        let id = parse_location_id(location).expect("invalid location");
+        assert_eq!(id, 45);
     });
 }
 
@@ -130,9 +140,7 @@ fn update_post_published() {
         assert_eq!(res.status(), Status::SeeOther);
         let location = res.headers().get("Location")
             .last().expect("Location is not set"); 
-        let slug = Regex::new(r"^/post/([\w-]+)$").unwrap()
-            .captures(location).unwrap()
-            .get(1).expect("location format invalid").as_str();
+        let slug = parse_location_slug(location).expect("location format invalid");
         assert_eq!(slug, "sometitle-of-a-twice-updated-post");
     });
 }
@@ -192,17 +200,6 @@ fn list_no_params() {
     });
 }
 
-fn parse_location_id(location: &str) -> Option<i32> {
-    Regex::new(r"^/post/(\d+)$").unwrap()
-        .captures(location)?.get(1)?.as_str()
-        .parse::<i32>().ok()
-}
-
-fn parse_location_slug<'a>(location: &'a str) -> Option<&'a str> {
-    Regex::new(r"^/post/([\w-]+)$").unwrap()
-        .captures(location)?
-        .get(1).map(|c| c.as_str())
-}
 
 fn check_post(url: &str, body: &str) -> Post {
     let mut post = None;
