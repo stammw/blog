@@ -1,13 +1,17 @@
-extern crate stammw_blog;
+extern crate chrono;
 extern crate rocket;
 extern crate rocket_contrib;
 extern crate regex;
+extern crate stammw_blog;
 
+use chrono::{Duration, Utc};
 use regex::Regex;
 use rocket::http::Status;
+use stammw_blog::repositories::posts::PostRepository;
+use stammw_blog::models::Post;
 
 mod helpers;
-use helpers::{get,post};
+use helpers::{get, post, post_req};
 
 #[test]
 fn index_renders() {
@@ -187,3 +191,88 @@ fn list_no_params() {
         assert!(body.contains("title3"));
     });
 }
+
+fn parse_location_id(location: &str) -> Option<i32> {
+    Regex::new(r"^/post/(\d+)$").unwrap()
+        .captures(location)?.get(1)?.as_str()
+        .parse::<i32>().ok()
+}
+
+fn parse_location_slug<'a>(location: &'a str) -> Option<&'a str> {
+    Regex::new(r"^/post/([\w-]+)$").unwrap()
+        .captures(location)?
+        .get(1).map(|c| c.as_str())
+}
+
+fn check_post(url: &str, body: &str) -> Post {
+    let mut post = None;
+    post_req(url, body, true, |req| {
+        let repo = req.inner().guard::<Box<PostRepository>>().unwrap();
+
+        let res = req.dispatch();
+        assert_eq!(res.status(), Status::SeeOther);
+        let location = res.headers().get("Location")
+            .last().expect("Location is not set"); 
+        println!("location: {}", location);
+
+        if let Some(id) = parse_location_id(location) {
+            post = repo.get(id);
+        } else if let Some(slug) = parse_location_slug(location) {
+            post = repo.get_by_slug(slug);
+        }
+
+    });
+    post.unwrap()
+}
+
+#[test]
+fn creation_date_set_on_creation() {
+    let body = "body=Body&title=creation_date_set_on_creation&published=false";
+    let post = check_post("/post/new", body);
+    let created_since = post.creation_date.signed_duration_since(Utc::now().naive_utc());
+    assert!(created_since < Duration::seconds(5));
+    assert!(post.publication_date.is_none());
+    assert!(post.edition_date.is_none());
+}
+
+#[test]
+fn publication_date_set_on_publishing_creation() {
+    let body = "body=Body&title=publication_date_set_on_publishing_creation&published=true";
+    let post = check_post("/post/new", body);
+    let created_since = post.creation_date.signed_duration_since(Utc::now().naive_utc());
+    let published_since = post.publication_date.expect("publication date should be set")
+        .signed_duration_since(Utc::now().naive_utc());
+    assert!(created_since < Duration::seconds(5));
+    assert!(published_since < Duration::seconds(5));
+    assert!(post.edition_date.is_none());
+}
+
+#[test]
+fn edition_date_set_on_edition() {
+    let body = "body=Body&title=edition_date_set_on_edition&published=false";
+    let new = check_post("/post/new", body);
+    let post = check_post(&format!("/post/{}", new.id), body);
+    let created_since = post.creation_date.signed_duration_since(Utc::now().naive_utc());
+    let edited_since = post.edition_date.expect("edition date should be set")
+        .signed_duration_since(Utc::now().naive_utc());
+    assert!(created_since < Duration::seconds(5));
+    assert!(edited_since < Duration::seconds(5));
+    assert!(post.publication_date.is_none());
+}
+
+#[test]
+fn publication_date_set_on_publishing_edition() {
+    let mut body = "body=Body&title=dition_date_set_on_publishing_edition&published=false";
+    let new = check_post("/post/new", body);
+    body = "body=Body&title=dition_date_set_on_publishing_edition&published=true";
+    let post = check_post(&format!("/post/{}", new.id), body);
+    let created_since = post.creation_date.signed_duration_since(Utc::now().naive_utc());
+    let edited_since = post.edition_date.expect("edition date should be set")
+        .signed_duration_since(Utc::now().naive_utc());
+    let published_since = post.publication_date.expect("publication date should be set")
+        .signed_duration_since(Utc::now().naive_utc());
+    assert!(created_since < Duration::seconds(5));
+    assert!(edited_since < Duration::seconds(5));
+    assert!(published_since < Duration::seconds(5));
+}
+

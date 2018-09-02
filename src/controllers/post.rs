@@ -117,6 +117,10 @@ fn new(post_repo: Box<PostRepository>, user: UserToken, form: Form<PostForm>)
         body: post.body.to_owned(),
         published: post.published,
         creation_date: Utc::now().naive_utc(),
+        publication_date: match post.published {
+            true  => Some(Utc::now().naive_utc()),
+            false => None,
+        },
     };
 
     let inserted = post_repo.insert(&post);
@@ -164,9 +168,9 @@ pub fn update(post_repo: Box<PostRepository>, post_id: i32, form: Form<PostForm>
         creation_date: existing_post.creation_date,
         edition_date: Some(Utc::now().naive_utc()),
         publication_date: match (existing_post.publication_date, post.published) {
-            (Some(date), _) => Some(date),
-            (None, true)    => Some(Utc::now().naive_utc()),
-            (None, false)   => None,
+            (Some(date), _)       => Some(date),
+            (None,       true)    => Some(Utc::now().naive_utc()),
+            (None,       false)   => None,
         },
         published: post.published,
     };

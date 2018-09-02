@@ -26,6 +26,7 @@ pub struct NewPost {
     pub body: String,
     pub published: bool,
     pub creation_date: NaiveDateTime,
+    pub publication_date: Option<NaiveDateTime>,
 }
 
 impl Post {
