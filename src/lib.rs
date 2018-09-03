@@ -40,7 +40,6 @@ use std::path::{Path, PathBuf};
 use controllers::login;
 use controllers::post;
 use controllers::user;
-use repositories::users;
 
 #[get("/<file..>")]
 fn static_file(file: PathBuf) -> Option<NamedFile> {
@@ -52,7 +51,8 @@ struct Secret(String);
 pub fn rocket() -> rocket::Rocket {
     rocket::ignite()
         .attach(Template::fairing())
-        .manage(users::factory)
+        .manage(repositories::users::factory)
+        .manage(repositories::posts::factory)
         .manage(db::init_pool())
         .mount(
             "/",

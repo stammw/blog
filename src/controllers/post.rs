@@ -9,11 +9,10 @@ use slug;
 use auth::{ForwardUserToken, UserToken};
 use models::NewPost;
 use models::Post;
-use repositories::posts::PostRepository;
-use repositories::users::UserRepo;
+use repositories::posts::PostRepo;
 
 #[get("/")]
-pub fn index(post_repo: Box<PostRepository>, repo: UserRepo, user: Option<UserToken>)
+pub fn index(post_repo: PostRepo, user: Option<UserToken>)
          -> Result<Template, Redirect> {
     let last_post: Vec<Post> = post_repo.all_published(50)
         .into_iter()
@@ -36,20 +35,20 @@ impl Default for ListParams {
 }
 
 #[get("/list")]
-fn list(user: UserToken, post_repo: Box<PostRepository>)
+fn list(user: UserToken, post_repo: PostRepo)
             -> Result<Template, NotFound<&'static str>> {
     list_params(ListParams::default(), user, post_repo)
 }
 
 #[get("/list?<params>")]
-fn list_params(params: ListParams, user: UserToken, post_repo: Box<PostRepository>)
+fn list_params(params: ListParams, user: UserToken, post_repo: PostRepo)
             -> Result<Template, NotFound<&'static str>> {
     let posts = post_repo.all(50, params.published);
     Ok(Template::render("post/list", json!({ "user": user, "posts": posts, "params": params })))
 }
 
 #[get("/<post_id>")]
-pub fn get(post_repo: Box<PostRepository>, post_id: i32, user: ForwardUserToken)
+pub fn get(post_repo: PostRepo, post_id: i32, user: ForwardUserToken)
            -> Result<Template, NotFound<&'static str>> {
     println!("get id {}", post_id);
     match post_repo.get(post_id) {
@@ -61,7 +60,7 @@ pub fn get(post_repo: Box<PostRepository>, post_id: i32, user: ForwardUserToken)
 }
 
 #[get("/<slug>", rank = 2)]
-pub fn get_by_slug(post_repo: Box<PostRepository>, slug: String, user: Option<UserToken>)
+pub fn get_by_slug(post_repo: PostRepo, slug: String, user: Option<UserToken>)
                    -> Result<Template, NotFound<&'static str>> {
     match post_repo.get_by_slug(&slug) {
         Some(post) => {
@@ -101,7 +100,7 @@ impl PostForm {
 }
 
 #[post("/new", data = "<form>")]
-fn new(post_repo: Box<PostRepository>, user: UserToken, form: Form<PostForm>)
+fn new(post_repo: PostRepo, user: UserToken, form: Form<PostForm>)
        -> Result<Redirect, BadRequest<Template>> {
     let post = form.into_inner();
 
@@ -132,7 +131,7 @@ fn new(post_repo: Box<PostRepository>, user: UserToken, form: Form<PostForm>)
 }
 
 #[get("/<post_id>/edit")]
-fn edit(post_id: i32, user: UserToken, post_repo: Box<PostRepository>)
+fn edit(post_id: i32, user: UserToken, post_repo: PostRepo)
             -> Result<Template, NotFound<&'static str>> {
     match post_repo.get(post_id) {
         Some(post) => {
@@ -143,7 +142,7 @@ fn edit(post_id: i32, user: UserToken, post_repo: Box<PostRepository>)
 }
 
 #[post("/<post_id>", data = "<form>")]
-pub fn update(post_repo: Box<PostRepository>, post_id: i32, form: Form<PostForm>, user: UserToken)
+pub fn update(post_repo: PostRepo, post_id: i32, form: Form<PostForm>, user: UserToken)
            -> Result<Redirect, BadRequest<Template>> {
     let post = form.into_inner();
 
