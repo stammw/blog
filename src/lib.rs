@@ -31,6 +31,7 @@ pub mod models;
 pub mod repositories;
 pub mod schema;
 pub mod auth;
+pub mod pagination;
 
 use rocket::response::NamedFile;
 use rocket::fairing::AdHoc;
@@ -58,6 +59,7 @@ pub fn rocket() -> rocket::Rocket {
             "/",
             routes![
                 post::index,
+                post::index_page,
                 login::form_already_logged,
                 login::form,
                 login::auth_already_logged,

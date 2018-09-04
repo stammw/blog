@@ -1,24 +1,29 @@
 {{#> layout title="List Posts"}}
 {{#*inline "body-block"}}
 <div id="banner" class="page-header">
-	<h1>Digital Rodomontade</h1>
-	<p class="lead">A cool experience of building a small blogging app with Rocket.rs.</p>
+    <h1>Digital Rodomontade</h1>
+    <p class="lead">A cool experience of building a small blogging app with Rocket.rs.</p>
 </div>
 {{#each posts}}
-{{#each posts}}
     <div class="bs-docs-section clearfix">
-	<h1><a href="post/{{ slug }}">{{ title }}</a></h1>
-	<p class="lead">
-	    {{{ body }}}
-	</p>
+        <h1><a href="post/{{ slug }}">{{ title }}</a></h1>
+        <p class="lead">
+            {{{ body }}}
+        </p>
     </div>
 {{/each}}
-    <div class="bs-docs-section clearfix">
-	<h1><a href="post/{{ slug }}">{{ title }}</a></h1>
-	<p class="lead">
-	    {{{ body }}}
-	</p>
-    </div>
-{{/each}}
+<nav aria-label="Page navigation example">
+    <ul class="pagination">
+        {{#if pages.prev}}
+            <li class="page-item"><a class="page-link" href="/?page={{ pages.prev }}">Previous</a></li>
+        {{/if}}
+        {{#each pages.pages}}
+            <li class="page-item"><a class="page-link" href="/?page={{ this }}">{{ this }}</a></li>
+        {{/each}}
+        {{#if pages.next}}
+            <li class="page-item"><a class="page-link" href="/?page={{ pages.next }}">Next</a></li>
+        {{/if}}
+    </ul>
+</nav>
 {{/inline}}
 {{/layout}}

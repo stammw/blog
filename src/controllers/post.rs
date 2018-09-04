@@ -9,16 +9,28 @@ use slug;
 use auth::{ForwardUserToken, UserToken};
 use models::NewPost;
 use models::Post;
+use pagination::PaginationParams;
 use repositories::posts::PostRepo;
 
 #[get("/")]
 pub fn index(post_repo: PostRepo, user: Option<UserToken>)
          -> Result<Template, Redirect> {
-    let last_post: Vec<Post> = post_repo.all_published(50)
+    index_page(PaginationParams::default(), post_repo, user)
+}
+
+#[get("/?<pagination>")]
+pub fn index_page(pagination: PaginationParams, post_repo: PostRepo, user: Option<UserToken>)
+         -> Result<Template, Redirect> {
+    let last_post: Vec<Post> = post_repo.all_published(5, pagination.page as i64 - 1)
         .into_iter()
         .map(|p| p.to_html())
         .collect();
-    Ok(Template::render("index", json!({ "user": user, "posts": last_post })))
+
+    Ok(Template::render("index", json!({
+        "user": user,
+        "posts": last_post,
+        "pages": pagination.context(post_repo.count() as u32),
+    })))
 }
 
 #[derive(FromForm, Serialize)]

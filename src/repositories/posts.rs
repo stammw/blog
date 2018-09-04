@@ -1,5 +1,6 @@
 use db::Database;
 use diesel::prelude::*;
+use diesel::dsl::*;
 use diesel;
 use models::{Post,NewPost};
 use rocket::Request;
@@ -20,16 +21,17 @@ pub fn factory(db: Database) -> PostRepo {
 
 pub trait PostRepoTrait {
     fn all(&self, limit: i64, published_: Option<bool>) -> Vec<Post>;
-    fn all_published(&self, limit: i64) -> Vec<Post>;
+    fn all_published(&self, limit: i64, page: i64) -> Vec<Post>;
     fn get(&self, post_id: i32) -> Option<Post>;
     fn get_by_slug(&self, post_slug: &str) -> Option<Post>;
     fn insert(&self, post: &NewPost) -> Post;
     fn update(&self, post: &Post) -> Post;
+    fn count(&self) -> i64;
 }
 
 impl PostRepoTrait for PostRepoImpl {
-    fn all_published(&self, limit: i64) -> Vec<Post> {
-         posts.limit(limit)
+    fn all_published(&self, limit: i64, page: i64) -> Vec<Post> {
+         posts.limit(limit).offset(limit * page)
             .filter(published.eq(true))
             .order(publication_date.desc())
             .load::<Post>(&*self.db)
@@ -83,6 +85,13 @@ impl PostRepoTrait for PostRepoImpl {
             .set(post)
             .get_result::<Post>(&*self.db)
             .expect("Failed to insert post")
+    }
+
+    fn count(&self) -> i64 {
+        posts.select(count(id))
+            .filter(published.eq(true))
+            .first(&*self.db)
+            .expect("Could not count posts")
     }
 }
 
