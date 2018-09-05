@@ -57,7 +57,7 @@ mod tests {
     fn check_context(page: u32, item_per_page: u32, total_items: u32) -> PaginationContext {
         let pagination = PaginationParams {
             page: page,
-            items_per_page: item_per_page,
+            items_per_page: Some(item_per_page),
         };
         pagination.context(total_items)
     }
