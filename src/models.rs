@@ -9,6 +9,7 @@ use schema::{posts, users};
 #[table_name = "posts"]
 pub struct Post {
     pub id: i32,
+    pub user_id: i32,
     pub slug: String,
     pub title: String,
     pub body: String,
@@ -21,6 +22,7 @@ pub struct Post {
 #[derive(Insertable, Debug)]
 #[table_name = "posts"]
 pub struct NewPost {
+    pub user_id: i32,
     pub title: String,
     pub slug: String,
     pub body: String,
@@ -39,7 +41,7 @@ impl Post {
     }
 }
 
-#[derive(Queryable, Serialize, Deserialize, Clone, FromForm, Debug)]
+#[derive(Identifiable, Queryable, Serialize, Deserialize, Clone, FromForm, Debug)]
 pub struct User {
     pub id: i32,
     pub name: String,

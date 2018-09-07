@@ -123,6 +123,7 @@ fn new(post_repo: PostRepo, user: UserToken, form: Form<PostForm>)
     }
 
     let post = NewPost {
+        user_id: user.id,
         title: post.title.to_owned(),
         slug: slug::slugify(&post.title),
         body: post.body.to_owned(),
@@ -173,6 +174,7 @@ pub fn update(post_repo: PostRepo, post_id: i32, form: Form<PostForm>, user: Use
 
     let post = Post {
         id: post_id,
+        user_id: user.id,
         slug: slug::slugify(post.title.to_owned()),
         title: post.title,
         body: post.body,
