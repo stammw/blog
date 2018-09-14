@@ -46,7 +46,9 @@ impl Post {
 pub struct User {
     pub id: i32,
     pub name: String,
+    #[serde(skip_serializing)]
     pub email: String,
+    #[serde(skip_serializing)]
     pub password: String,
 }
 
