@@ -5,7 +5,8 @@ use chrono::NaiveDateTime;
 
 use schema::{posts, users};
 
-#[derive(Queryable, Serialize, Deserialize, Clone, Insertable, Debug, AsChangeset, Identifiable)]
+#[derive(Queryable, Serialize, Deserialize, Clone, Insertable, Debug, AsChangeset, Identifiable, Associations)]
+#[belongs_to(User)]
 #[table_name = "posts"]
 pub struct Post {
     pub id: i32,

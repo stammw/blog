@@ -1,11 +1,13 @@
+use std::collections::HashMap;
 use db::Database;
 use diesel::prelude::*;
 use diesel::dsl::*;
 use diesel;
-use models::{Post,NewPost};
+use models::{Post,NewPost, User};
 use rocket::Request;
 use rocket::request::{FromRequest, Outcome};
 use schema::posts::dsl::*;
+use schema::users;
 
 pub type PostRepo = Box<PostRepoTrait + Send>;
 
@@ -21,7 +23,7 @@ pub fn factory(db: Database) -> PostRepo {
 
 pub trait PostRepoTrait {
     fn all(&self, limit: i64, published_: Option<bool>) -> Vec<Post>;
-    fn all_published(&self, limit: i64, page: i64) -> Vec<Post>;
+    fn all_published(&self, limit: i64, page: i64) -> Vec<(User, Post)>;
     fn get(&self, post_id: i32) -> Option<Post>;
     fn get_by_slug(&self, post_slug: &str) -> Option<Post>;
     fn insert(&self, post: &NewPost) -> Post;
@@ -30,12 +32,21 @@ pub trait PostRepoTrait {
 }
 
 impl PostRepoTrait for PostRepoImpl {
-    fn all_published(&self, limit: i64, page: i64) -> Vec<Post> {
-         posts.limit(limit).offset(limit * page)
+    fn all_published(&self, limit: i64, page: i64) -> Vec<(User, Post)> {
+        let users_map = users::table.load::<User>(&*self.db)
+            .expect("Error loading users")
+            .into_iter()
+            .map(|u| (u.id, u))
+            .collect::<HashMap<i32, User>>();
+
+        posts.limit(limit).offset(limit * page)
             .filter(published.eq(true))
             .order(publication_date.desc())
             .load::<Post>(&*self.db)
             .expect("Error loading posts")
+            .into_iter()
+            .map(|p| (users_map.get(&p.user_id).unwrap().clone(), p))
+            .collect()
     }
 
     fn all(&self, limit: i64, published_: Option<bool>) -> Vec<Post> {

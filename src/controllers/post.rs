@@ -4,11 +4,11 @@ use rocket::request::Form;
 use rocket::response::status::{BadRequest, NotFound};
 use rocket::response::Redirect;
 use rocket_contrib::Template;
+use serde_json::value::Value;
 use slug;
 
 use auth::{ForwardUserToken, UserToken};
-use models::NewPost;
-use models::Post;
+use models::{Post, NewPost};
 use pagination::PaginationParams;
 use repositories::posts::PostRepo;
 
@@ -21,14 +21,17 @@ pub fn index(post_repo: PostRepo, user: Option<UserToken>)
 #[get("/?<pagination>")]
 pub fn index_page(pagination: PaginationParams, post_repo: PostRepo, user: Option<UserToken>)
          -> Result<Template, Redirect> {
-    let last_post: Vec<Post> = post_repo.all_published(5, pagination.page as i64 - 1)
+    let last_posts: Vec<Value> = post_repo.all_published(5, pagination.page as i64 - 1)
         .into_iter()
-        .map(|p| p.to_html())
-        .collect();
+        .map(|(u, p)| {
+            let mut post = json!(p.to_html());
+            post.as_object_mut().unwrap().insert("user".to_string(), json!(u)); 
+            post
+        }).collect();
 
     Ok(Template::render("index", json!({
         "user": user,
-        "posts": last_post,
+        "posts": last_posts,
         "pages": pagination.context(post_repo.count() as u32),
     })))
 }
