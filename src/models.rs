@@ -3,7 +3,7 @@ use regex::Regex;
 use pulldown_cmark::{html, Parser};
 use chrono::NaiveDateTime;
 
-use schema::{posts, users};
+use schema::{posts, users, comments};
 
 #[derive(Queryable, Serialize, Deserialize, Clone, Insertable, Debug, AsChangeset, Identifiable, Associations)]
 #[belongs_to(User)]
@@ -82,6 +82,26 @@ impl NewUser {
             Ok(())
         }
     }
+}
+
+#[derive(Queryable, Serialize, Deserialize, Clone, Insertable, Debug, AsChangeset, Identifiable, Associations)]
+#[belongs_to(User, Post)]
+#[table_name = "comments"]
+pub struct Comment {
+    pub id: i32,
+    pub user_id: i32,
+    pub post_id: i32,
+    pub body: String,
+    pub creation_date: NaiveDateTime,
+}
+
+#[derive(Insertable, Debug)]
+#[table_name = "comments"]
+pub struct NewComment {
+    pub user_id: i32,
+    pub post_id: i32,
+    pub body: String,
+    pub creation_date: NaiveDateTime,
 }
 
 #[cfg(test)]

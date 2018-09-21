@@ -42,5 +42,5 @@ version = "0.3.0"
 
 [dependencies.rocket_contrib]
 default-features = false
-features = ["handlebars_templates"]
+features = ["handlebars_templates", "json"]
 version = "0.3.0"

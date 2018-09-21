@@ -42,6 +42,7 @@ use std::path::{Path, PathBuf};
 use controllers::login;
 use controllers::post;
 use controllers::user;
+use controllers::comment;
 
 #[get("/<file..>")]
 fn static_file(file: PathBuf) -> Option<NamedFile> {
@@ -78,6 +79,7 @@ pub fn rocket() -> rocket::Rocket {
             post::update,
             post::list,
             post::list_params,
+            comment::new,
         ])
         .mount("/user", routes![user::new, user::create])
         .attach(AdHoc::on_attach(|rocket| {

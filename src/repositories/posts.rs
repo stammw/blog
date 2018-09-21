@@ -29,6 +29,7 @@ pub trait PostRepoTrait {
     fn insert(&self, post: &NewPost) -> Post;
     fn update(&self, post: &Post) -> Post;
     fn count(&self) -> i64;
+    fn is_published(&self, post_id: i32) -> bool;
 }
 
 impl PostRepoTrait for PostRepoImpl {
@@ -103,6 +104,14 @@ impl PostRepoTrait for PostRepoImpl {
             .filter(published.eq(true))
             .first(&*self.db)
             .expect("Could not count posts")
+    }
+
+    fn is_published(&self, post_id: i32) -> bool {
+        let count: i64 = posts.select(count(id))
+            .filter(id.eq(post_id).and(published.eq(true)))
+            .first(&*self.db)
+            .expect("Could not count posts");
+        count > 0
     }
 }
 
