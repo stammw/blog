@@ -85,7 +85,7 @@ impl NewUser {
 }
 
 #[derive(Queryable, Serialize, Deserialize, Clone, Insertable, Debug, AsChangeset, Identifiable, Associations)]
-#[belongs_to(User, Post)]
+#[belongs_to(Post, User)]
 #[table_name = "comments"]
 pub struct Comment {
     pub id: i32,

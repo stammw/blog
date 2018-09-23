@@ -3,7 +3,7 @@ use db::Database;
 use diesel::prelude::*;
 use diesel::dsl::*;
 use diesel;
-use models::{Post,NewPost, User};
+use models::{Post,NewPost, User, Comment};
 use rocket::Request;
 use rocket::request::{FromRequest, Outcome};
 use schema::posts::dsl::*;
@@ -23,7 +23,7 @@ pub fn factory(db: Database) -> PostRepo {
 
 pub trait PostRepoTrait {
     fn all(&self, limit: i64, published_: Option<bool>) -> Vec<Post>;
-    fn all_published(&self, limit: i64, page: i64) -> Vec<(User, Post)>;
+    fn all_published(&self, limit: i64, page: i64) -> Vec<(User, Post, Vec<Comment>)>;
     fn get(&self, post_id: i32) -> Option<Post>;
     fn get_by_slug(&self, post_slug: &str) -> Option<Post>;
     fn insert(&self, post: &NewPost) -> Post;
@@ -33,20 +33,27 @@ pub trait PostRepoTrait {
 }
 
 impl PostRepoTrait for PostRepoImpl {
-    fn all_published(&self, limit: i64, page: i64) -> Vec<(User, Post)> {
+    fn all_published(&self, limit: i64, page: i64) -> Vec<(User, Post, Vec<Comment>)> {
         let users_map = users::table.load::<User>(&*self.db)
             .expect("Error loading users")
             .into_iter()
             .map(|u| (u.id, u))
             .collect::<HashMap<i32, User>>();
 
-        posts.limit(limit).offset(limit * page)
+        let published_posts = posts.limit(limit).offset(limit * page)
             .filter(published.eq(true))
             .order(publication_date.desc())
             .load::<Post>(&*self.db)
-            .expect("Error loading posts")
+            .expect("Error loading posts");
+
+        let comments = Comment::belonging_to(&published_posts)
+            .load::<Comment>(&*self.db).expect("Failed to load comments")
+            .grouped_by(&published_posts);
+
+        published_posts
             .into_iter()
-            .map(|p| (users_map.get(&p.user_id).unwrap().clone(), p))
+            .zip(comments)
+            .map(|(p, c)| (users_map.get(&p.user_id).unwrap().clone(), p, c))
             .collect()
     }
 

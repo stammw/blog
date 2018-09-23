@@ -23,9 +23,13 @@ pub fn index_page(pagination: PaginationParams, post_repo: PostRepo, user: Optio
          -> Result<Template, Redirect> {
     let last_posts: Vec<Value> = post_repo.all_published(5, pagination.page as i64 - 1)
         .into_iter()
-        .map(|(u, p)| {
+        .map(|(u, p, c)| {
             let mut post = json!(p.to_html());
-            post.as_object_mut().unwrap().insert("user".to_string(), json!(u)); 
+            {
+                let post_json = post.as_object_mut().unwrap();
+                post_json.insert("user".to_string(), json!(u));
+                post_json.insert("comments".to_string(), json!(c));
+            }
             post
         }).collect();
 
