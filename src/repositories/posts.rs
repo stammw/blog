@@ -23,7 +23,7 @@ pub fn factory(db: Database) -> PostRepo {
 
 pub trait PostRepoTrait {
     fn all(&self, limit: i64, published_: Option<bool>) -> Vec<Post>;
-    fn all_published(&self, limit: i64, page: i64) -> Vec<(User, Post, Vec<Comment>)>;
+    fn all_published(&self, limit: i64, page: i64) -> Vec<(User, Post)>;
     fn get(&self, post_id: i32) -> Option<Post>;
     fn get_by_slug(&self, post_slug: &str) -> Option<(Post, User, Vec<(Comment, User)>)>;
     fn insert(&self, post: &NewPost) -> Post;
@@ -33,7 +33,7 @@ pub trait PostRepoTrait {
 }
 
 impl PostRepoTrait for PostRepoImpl {
-    fn all_published(&self, limit: i64, page: i64) -> Vec<(User, Post, Vec<Comment>)> {
+    fn all_published(&self, limit: i64, page: i64) -> Vec<(User, Post)> {
         let users_map = users::table.load::<User>(&*self.db)
             .expect("Error loading users")
             .into_iter()
@@ -46,14 +46,9 @@ impl PostRepoTrait for PostRepoImpl {
             .load::<Post>(&*self.db)
             .expect("Error loading posts");
 
-        let comments = Comment::belonging_to(&published_posts)
-            .load::<Comment>(&*self.db).expect("Failed to load comments")
-            .grouped_by(&published_posts);
-
         published_posts
             .into_iter()
-            .zip(comments)
-            .map(|(p, c)| (users_map.get(&p.user_id).unwrap().clone(), p, c))
+            .map(|p| (users_map.get(&p.user_id).unwrap().clone(), p))
             .collect()
     }
 
