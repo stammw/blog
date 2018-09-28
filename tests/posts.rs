@@ -215,7 +215,7 @@ fn check_post(url: &str, body: &str) -> Post {
         if let Some(id) = parse_location_id(location) {
             post = repo.get(id);
         } else if let Some(slug) = parse_location_slug(location) {
-            post = repo.get_by_slug(slug);
+            post = repo.get_by_slug(slug).map(|p| p.0);
         }
 
     });

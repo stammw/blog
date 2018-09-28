@@ -9,15 +9,15 @@ use helpers::post;
 
 #[test]
 fn can_comment_on_post() {
-    let body = "body=very_intedresting";
+    let body = "body=very_intedresting&user_id=1";
     post("/post/1/comment", body, true, |res| {
-        assert_eq!(res.status(), Status::Created);
+        assert_eq!(res.status(), Status::SeeOther);
     });
 }
 
 #[test]
 fn cannot_comment_when_not_logged() {
-    let body = "body=very_intedresting";
+    let body = "body=very_intedresting&user_id=1";
     post("/post/1/comment", body, false, |res| {
         assert_eq!(res.status(), Status::raw(401));
     });
@@ -25,7 +25,7 @@ fn cannot_comment_when_not_logged() {
 
 #[test]
 fn cannot_comment_on_non_existent_post() {
-    let body = "body=very_intedresting";
+    let body = "body=very_intedresting&user_id=1";
     post("/post/999/comment", body, true, |res| {
         assert_eq!(res.status(), Status::BadRequest);
     });

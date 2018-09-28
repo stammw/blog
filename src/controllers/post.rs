@@ -82,8 +82,17 @@ pub fn get(post_repo: PostRepo, post_id: i32, user: ForwardUserToken)
 pub fn get_by_slug(post_repo: PostRepo, slug: String, user: Option<UserToken>)
                    -> Result<Template, NotFound<&'static str>> {
     match post_repo.get_by_slug(&slug) {
-        Some(post) => {
-            Ok(Template::render("post/display", json!({ "user": user, "post": post.to_html() })))
+        Some((post, author, comments)) => {
+            let context = json!({
+                "user": user,
+                "post": post.to_html(),
+                "author": author,
+                "comments": comments.into_iter().map(|(comment, author)| {
+                    json!({ "comment": comment, "author": author })
+                }).collect::<Value>(),
+            });
+            println!("context: {}", context);
+            Ok(Template::render("post/display", context))
         }
         None => Err(NotFound("This article does not exists")),
     }

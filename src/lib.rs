@@ -1,4 +1,4 @@
-#![feature(plugin, custom_derive, decl_macro, extern_prelude)]
+#![feature(plugin, custom_derive, decl_macro)]
 #![plugin(rocket_codegen)]
 #![allow(proc_macro_derive_resolution_fallback)] // This can be removed after diesel-1.4
 

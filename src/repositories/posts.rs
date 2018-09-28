@@ -25,7 +25,7 @@ pub trait PostRepoTrait {
     fn all(&self, limit: i64, published_: Option<bool>) -> Vec<Post>;
     fn all_published(&self, limit: i64, page: i64) -> Vec<(User, Post, Vec<Comment>)>;
     fn get(&self, post_id: i32) -> Option<Post>;
-    fn get_by_slug(&self, post_slug: &str) -> Option<Post>;
+    fn get_by_slug(&self, post_slug: &str) -> Option<(Post, User, Vec<(Comment, User)>)>;
     fn insert(&self, post: &NewPost) -> Post;
     fn update(&self, post: &Post) -> Post;
     fn count(&self) -> i64;
@@ -79,15 +79,40 @@ impl PostRepoTrait for PostRepoImpl {
         }
     }
 
-    fn get_by_slug(&self, post_slug: &str) -> Option<Post> {
+    fn get_by_slug(&self, post_slug: &str) -> Option<(Post, User, Vec<(Comment, User)>)> {
+        let users_map = users::table.load::<User>(&*self.db)
+            .expect("Error loading users")
+            .into_iter()
+            .map(|u| (u.id, u))
+            .collect::<HashMap<i32, User>>();
+
         let result = posts.filter(
             slug.eq(post_slug)
                 .and(published.eq(true))
         ).first::<Post>(&*self.db);
 
-        match result {
-            Ok(p) => Some(p),
-            Err(diesel::NotFound) => None,
+        let post = match result {
+            Ok(p) => p,
+            Err(diesel::NotFound) => return None,
+            Err(_) => panic!("Failed to retreive one Post"),
+        };
+
+        let post_author = users_map.get(&post.user_id).expect("This post has no authors.");
+        let comments = Comment::belonging_to(&post)
+            .load::<Comment>(&*self.db);
+
+        match comments {
+            Ok(comments) => {
+                let comments_and_authors = comments.into_iter().filter_map(|c| {
+                    if let Some(comment_author) = users_map.get(&c.user_id) {
+                        Some((c, comment_author.to_owned()))
+                    } else {
+                        None
+                    }
+                }).collect();// TODO Join comments and users
+                Some((post, post_author.to_owned(), comments_and_authors))
+            },
+            Err(diesel::NotFound) => Some((post, post_author.to_owned(), vec![])),
             Err(_) => panic!("Failed to retreive one Post"),
         }
     }
