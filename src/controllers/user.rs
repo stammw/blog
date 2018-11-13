@@ -1,10 +1,11 @@
 use serde_json::map::Map;
 use auth::UserToken;
+use rocket::{get, post};
 use models::NewUser;
 use repositories::users::UserRepo;
 use rocket::response::status::BadRequest;
 use rocket::request::Form;
-use rocket_contrib::Template;
+use rocket_contrib::templates::Template;
 
 #[get("/new")]
 pub fn new(token: UserToken) -> Result<Template, BadRequest<String>> {
@@ -14,7 +15,7 @@ pub fn new(token: UserToken) -> Result<Template, BadRequest<String>> {
 #[post("/create", data = "<user_form>")]
 pub fn create(user_form: Form<NewUser>, repo: UserRepo, token: UserToken)
               -> Result<Template, BadRequest<Template>> {
-    let form = user_form.get();
+    let form = user_form.into_inner();
 
     if let Err(e) = form.validate() {
         return Err(BadRequest(Some(Template::render("user/new", json!({ "user": token, "error": e })))));

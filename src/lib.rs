@@ -1,5 +1,4 @@
-#![feature(plugin, custom_derive, decl_macro)]
-#![plugin(rocket_codegen)]
+#![feature(plugin, proc_macro_hygiene, custom_derive, decl_macro)]
 #![allow(proc_macro_derive_resolution_fallback)] // This can be removed after diesel-1.4
 
 #[macro_use]
@@ -16,6 +15,7 @@ extern crate chrono;
 extern crate pulldown_cmark;
 extern crate r2d2;
 extern crate r2d2_diesel;
+#[macro_use]
 extern crate rocket;
 extern crate rocket_contrib;
 extern crate serde;
@@ -34,9 +34,10 @@ pub mod schema;
 pub mod auth;
 pub mod pagination;
 
+use rocket::{get, routes};
 use rocket::response::NamedFile;
 use rocket::fairing::AdHoc;
-use rocket_contrib::Template;
+use rocket_contrib::templates::Template;
 use std::path::{Path, PathBuf};
 
 use controllers::login;
@@ -49,7 +50,7 @@ fn static_file(file: PathBuf) -> Option<NamedFile> {
     NamedFile::open(Path::new("public/").join(file)).ok()
 }
 
-struct Secret(String);
+pub struct Secret(String);
 
 pub fn rocket() -> rocket::Rocket {
     rocket::ignite()
@@ -78,11 +79,11 @@ pub fn rocket() -> rocket::Rocket {
             post::edit,
             post::update,
             post::list,
-            post::list_params,
+            post::list_with_params,
             comment::new,
         ])
         .mount("/user", routes![user::new, user::create])
-        .attach(AdHoc::on_attach(|rocket| {
+        .attach(AdHoc::on_attach("Cookies manager", |rocket| {
             println!("Adding token managed state from config...");
             let token_val = rocket.config().get_str("secret")
                 .expect("Missing secret configuration").to_string();

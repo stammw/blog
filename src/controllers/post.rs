@@ -1,9 +1,10 @@
 use std::collections::HashMap;
 use chrono::Utc;
+use rocket::{get, post};
 use rocket::request::Form;
 use rocket::response::status::{BadRequest, NotFound};
 use rocket::response::Redirect;
-use rocket_contrib::Template;
+use rocket_contrib::templates::Template;
 use serde_json::value::Value;
 use slug;
 
@@ -12,14 +13,7 @@ use models::{Post, NewPost};
 use pagination::PaginationParams;
 use repositories::posts::PostRepo;
 
-#[get("/")]
-pub fn index(post_repo: PostRepo, user: Option<UserToken>)
-         -> Result<Template, Redirect> {
-    index_page(PaginationParams::default(), post_repo, user)
-}
-
-#[get("/?<pagination>")]
-pub fn index_page(pagination: PaginationParams, post_repo: PostRepo, user: Option<UserToken>)
+fn index_pagination(pagination: PaginationParams, post_repo: PostRepo, user: Option<UserToken>)
          -> Result<Template, Redirect> {
     let last_posts: Vec<Value> = post_repo.all_published(5, pagination.page as i64 - 1)
         .into_iter()
@@ -39,8 +33,20 @@ pub fn index_page(pagination: PaginationParams, post_repo: PostRepo, user: Optio
     })))
 }
 
+#[get("/")]
+pub fn index(post_repo: PostRepo, user: Option<UserToken>)
+         -> Result<Template, Redirect> {
+    index_pagination(PaginationParams::default(), post_repo, user)
+}
+
+#[get("/?<pagination..>")]
+pub fn index_page(pagination: Form<PaginationParams>, post_repo: PostRepo, user: Option<UserToken>)
+         -> Result<Template, Redirect> {
+    index_pagination(pagination.into_inner(), post_repo, user)
+}
+
 #[derive(FromForm, Serialize)]
-struct ListParams {
+pub struct ListParams {
     pub published: Option<bool>,
 }
 
@@ -52,29 +58,33 @@ impl Default for ListParams {
     }
 }
 
-#[get("/list")]
-fn list(user: UserToken, post_repo: PostRepo)
-            -> Result<Template, NotFound<&'static str>> {
-    list_params(ListParams::default(), user, post_repo)
-}
-
-#[get("/list?<params>")]
 fn list_params(params: ListParams, user: UserToken, post_repo: PostRepo)
             -> Result<Template, NotFound<&'static str>> {
     let posts = post_repo.all(50, params.published);
     Ok(Template::render("post/list", json!({ "user": user, "posts": posts, "params": params })))
 }
 
+#[get("/list")]
+pub fn list(user: UserToken, post_repo: PostRepo)
+            -> Result<Template, NotFound<&'static str>> {
+    list_params(ListParams::default(), user, post_repo)
+}
+
+#[get("/list?<params..>")]
+pub fn list_with_params(params: Form<ListParams>, user: UserToken, post_repo: PostRepo)
+            -> Result<Template, NotFound<&'static str>> {
+    list_params(params.into_inner(), user, post_repo)
+}
+
+
 #[get("/<post_id>")]
 pub fn get(post_repo: PostRepo, post_id: i32, user: ForwardUserToken)
-           -> Result<Template, NotFound<&'static str>> {
+           -> Result<Template, diesel::result::Error> {
     println!("get id {}", post_id);
-    match post_repo.get(post_id) {
-        Some(post) => {
-            Ok(Template::render("post/display", json!({ "user": user.0, "post": post.to_html() })))
-        }
-        None => Err(NotFound("This article does not exists")),
-    }
+    Ok(Template::render("post/display", json!({
+        "user": user.0,
+        "post": post_repo.get(post_id)?.to_html()
+    })))
 }
 
 #[get("/<slug>", rank = 2)]
@@ -98,7 +108,7 @@ pub fn get_by_slug(post_repo: PostRepo, slug: String, user: Option<UserToken>)
 }
 
 #[get("/new")]
-fn edit_new(_user: UserToken) -> Template {
+pub fn edit_new(_user: UserToken) -> Template {
     Template::render("post/edit", ())
 }
 
@@ -119,7 +129,7 @@ impl PostForm {
             errors.insert("body", "Body shall not be emty");
         }
         if ! errors.is_empty() {
-           Err(errors) 
+           Err(errors)
         } else {
             Ok(self)
         }
@@ -127,7 +137,7 @@ impl PostForm {
 }
 
 #[post("/new", data = "<form>")]
-fn new(post_repo: PostRepo, user: UserToken, form: Form<PostForm>)
+pub fn new(post_repo: PostRepo, user: UserToken, form: Form<PostForm>)
        -> Result<Redirect, BadRequest<Template>> {
     let post = form.into_inner();
 
@@ -152,20 +162,20 @@ fn new(post_repo: PostRepo, user: UserToken, form: Form<PostForm>)
 
     let inserted = post_repo.insert(&post);
     if inserted.published {
-        Ok(Redirect::to(&format!("/post/{}", inserted.slug)))
+        Ok(Redirect::to(uri!(get_by_slug: inserted.slug)))
     } else {
-        Ok(Redirect::to(&format!("/post/{}", inserted.id)))
+        Ok(Redirect::to(uri!(get: inserted.id)))
     }
 }
 
 #[get("/<post_id>/edit")]
-fn edit(post_id: i32, user: UserToken, post_repo: PostRepo)
+pub fn edit(post_id: i32, user: UserToken, post_repo: PostRepo)
             -> Result<Template, NotFound<&'static str>> {
     match post_repo.get(post_id) {
-        Some(post) => {
+        Ok(post) => {
             Ok(Template::render("post/edit", json!({ "user": user, "post": post })))
         }
-        None => Err(NotFound("This article does not exists")),
+        Err(_) => Err(NotFound("This article does not exists")),
     }
 }
 
@@ -181,8 +191,8 @@ pub fn update(post_repo: PostRepo, post_id: i32, form: Form<PostForm>, user: Use
     }
 
     let existing_post = match post_repo.get(post_id) {
-        Some(p) => p,
-        None    => return Err(BadRequest(Some(Template::render(
+        Ok(p) => p,
+        Err(_)    => return Err(BadRequest(Some(Template::render( // TODO should be not found
             "post/edit", json!({ "user": user, "post": &post})
         )))),
     };
@@ -205,8 +215,8 @@ pub fn update(post_repo: PostRepo, post_id: i32, form: Form<PostForm>, user: Use
 
     let post = post_repo.update(&post);
     if post.published {
-        Ok(Redirect::to(&format!("/post/{}", post.slug)))
+        Ok(Redirect::to(uri!(get_by_slug: post.slug)))
     } else {
-        Ok(Redirect::to(&format!("/post/{}", post.id)))
+        Ok(Redirect::to(uri!(get: post.id)))
     }
 }

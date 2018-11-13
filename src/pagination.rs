@@ -61,7 +61,7 @@ mod tests {
         };
         pagination.context(total_items)
     }
-    
+
     #[test]
     fn one_page_has_no_next_no_prev() {
         let context = check_context(1, 5, 4);
@@ -113,7 +113,7 @@ mod tests {
         assert_eq!(check_context(0, 5, 5).current, 1);
         assert_eq!(check_context(0, 5, 0).current, 1);
     }
-    
+
     #[test]
     fn current_set_to_last_when_outside_bounds_after() {
         assert_eq!(check_context(6, 5, 18).current, 4);

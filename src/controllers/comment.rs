@@ -1,10 +1,11 @@
 use chrono::Utc;
-use rocket::request::Form;
+use rocket::post;
+use rocket::request::{Form};
 use rocket::response::Redirect;
 use rocket::response::status::BadRequest;
-use rocket_contrib::{Json, Value};
 use std::collections::HashMap;
 
+use controllers::post;
 use auth::UserToken;
 use models::NewComment;
 use repositories::comments::CommentRepo;
@@ -31,22 +32,22 @@ impl CommentForm {
 }
 
 #[post("/<post_id>/comment", data = "<form>")]
-fn new(
+pub fn new(
     post_id: i32,
     form: Form<CommentForm>,
     comment_repo: CommentRepo,
     post_repo: PostRepo,
     user: UserToken,
-) -> Result<Redirect, BadRequest<Json<Value>>> {
+) -> Result<Redirect, BadRequest<serde_json::Value>> {
     let comment = form.into_inner();
 
     if let Err(e) = comment.validate() {
-        return Err(BadRequest(Some(Json(json!(e)))));
+        return Err(BadRequest(Some(json!(e))));
     }
 
     let post = match post_repo.get(post_id) {
-        Some(post) => post,
-        None => return Err(BadRequest(None)),
+        Ok(post) => post,
+        Err(_) => return Err(BadRequest(None)),
     };
 
     if comment.user_id != user.id {
@@ -61,5 +62,5 @@ fn new(
     };
 
     comment_repo.insert(&comment);
-    Ok(Redirect::to(&format!("/post/{}", post.slug)))
+    Ok(Redirect::to(uri!(post::get_by_slug: post.slug)))
 }

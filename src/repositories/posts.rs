@@ -9,6 +9,7 @@ use rocket::request::{FromRequest, Outcome};
 use schema::posts::dsl::*;
 use schema::users;
 
+pub type Result<T> = std::result::Result<T, diesel::result::Error>;
 pub type PostRepo = Box<PostRepoTrait + Send>;
 
 pub type PostRepoFactory = fn(db: Database) -> PostRepo;
@@ -24,7 +25,7 @@ pub fn factory(db: Database) -> PostRepo {
 pub trait PostRepoTrait {
     fn all(&self, limit: i64, published_: Option<bool>) -> Vec<Post>;
     fn all_published(&self, limit: i64, page: i64) -> Vec<(User, Post)>;
-    fn get(&self, post_id: i32) -> Option<Post>;
+    fn get(&self, post_id: i32) -> Result<Post>;
     fn get_by_slug(&self, post_slug: &str) -> Option<(Post, User, Vec<(Comment, User)>)>;
     fn insert(&self, post: &NewPost) -> Post;
     fn update(&self, post: &Post) -> Post;
@@ -63,15 +64,9 @@ impl PostRepoTrait for PostRepoImpl {
             .expect("Error loading posts")
     }
 
-    fn get(&self, post_id: i32) -> Option<Post> {
-        let result = posts.filter(id.eq(post_id))
-            .first::<Post>(&*self.db);
-
-        match result {
-            Ok(p) => Some(p),
-            Err(diesel::NotFound) => None,
-            Err(_) => panic!("Failed to retreive one Post"),
-        }
+    fn get(&self, post_id: i32) -> Result<Post> {
+        posts.filter(id.eq(post_id))
+            .first::<Post>(&*self.db)
     }
 
     fn get_by_slug(&self, post_slug: &str) -> Option<(Post, User, Vec<(Comment, User)>)> {
