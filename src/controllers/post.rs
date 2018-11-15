@@ -3,6 +3,7 @@ use chrono::Utc;
 use rocket::{get, post};
 use rocket::request::Form;
 use rocket::response::status::{BadRequest, NotFound};
+use rocket::http::Status;
 use rocket::response::Redirect;
 use rocket_contrib::templates::Template;
 use serde_json::value::Value;
@@ -89,9 +90,9 @@ pub fn get(post_repo: PostRepo, post_id: i32, user: ForwardUserToken)
 
 #[get("/<slug>", rank = 2)]
 pub fn get_by_slug(post_repo: PostRepo, slug: String, user: Option<UserToken>)
-                   -> Result<Template, NotFound<&'static str>> {
+                   -> Result<Template, rocket::http::Status> {
     match post_repo.get_by_slug(&slug) {
-        Some((post, author, comments)) => {
+        Ok((post, author, comments)) => {
             let context = json!({
                 "user": user,
                 "post": post.to_html(),
@@ -103,7 +104,8 @@ pub fn get_by_slug(post_repo: PostRepo, slug: String, user: Option<UserToken>)
             println!("context: {}", context);
             Ok(Template::render("post/display", context))
         }
-        None => Err(NotFound("This article does not exists")),
+        Err(diesel::NotFound) => Err(Status::NotFound),
+        Err(_) => Err(Status::new(500, "Internal server error")),
     }
 }
 

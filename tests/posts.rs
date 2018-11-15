@@ -49,7 +49,7 @@ fn create_post_success_location_slug_if_published() {
     post("/post/new", body, true, |res| {
         assert_eq!(res.status(), Status::SeeOther);
         let location = res.headers().get("Location")
-            .last().expect("Location is not set"); 
+            .last().expect("Location is not set");
         let slug = parse_location_slug(location).expect("invalid location");
         assert_eq!(slug, "sometitle-of-a-post");
     });
@@ -61,7 +61,7 @@ fn create_post_success_location_id_if_unpublished() {
     post("/post/new", body, true, |res| {
         assert_eq!(res.status(), Status::SeeOther);
         let location = res.headers().get("Location")
-            .last().expect("Location is not set"); 
+            .last().expect("Location is not set");
         let id = parse_location_id(location).expect("invalid location");
         assert!(id > 0);
     });
@@ -127,7 +127,7 @@ fn update_post_unpublished() {
     post("/post/45", body, true, |res| {
         assert_eq!(res.status(), Status::SeeOther);
         let location = res.headers().get("Location")
-            .last().expect("Location is not set"); 
+            .last().expect("Location is not set");
         let id = parse_location_id(location).expect("invalid location");
         assert_eq!(id, 45);
     });
@@ -139,7 +139,7 @@ fn update_post_published() {
     post("/post/45", body, true, |res| {
         assert_eq!(res.status(), Status::SeeOther);
         let location = res.headers().get("Location")
-            .last().expect("Location is not set"); 
+            .last().expect("Location is not set");
         let slug = parse_location_slug(location).expect("location format invalid");
         assert_eq!(slug, "sometitle-of-a-twice-updated-post");
     });
@@ -209,13 +209,14 @@ fn check_post(url: &str, body: &str) -> Post {
         let res = req.dispatch();
         assert_eq!(res.status(), Status::SeeOther);
         let location = res.headers().get("Location")
-            .last().expect("Location is not set"); 
+            .last().expect("Location is not set");
         println!("location: {}", location);
 
         if let Some(id) = parse_location_id(location) {
-            post = repo.get(id);
+            post = repo.get(id).ok();
         } else if let Some(slug) = parse_location_slug(location) {
-            post = repo.get_by_slug(slug).map(|p| p.0);
+            post = repo.get_by_slug(slug)
+                .map(|p| p.0).ok();
         }
 
     });
@@ -272,4 +273,3 @@ fn publication_date_set_on_publishing_edition() {
     assert!(edited_since < Duration::seconds(5));
     assert!(published_since < Duration::seconds(5));
 }
-
