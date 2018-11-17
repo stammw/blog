@@ -5,9 +5,11 @@ use rocket::response::Redirect;
 use rocket::response::status;
 use rocket::{get, post, State};
 use rocket_contrib::templates::Template;
-use repositories::users::UserRepo;
-use auth::{ ForwardUserToken, UserToken };
 use argon2rs::argon2i_simple;
+
+use auth::{ ForwardUserToken, UserToken };
+use db::Database;
+use models::User;
 
 use Secret;
 
@@ -35,7 +37,7 @@ pub fn auth_already_logged(_user: ForwardUserToken) -> Redirect {
 }
 
 #[post("/login", data = "<login_form>", rank = 2)]
-pub fn auth(mut cookies: Cookies, login_form: Option<Form<Login>>, repo: UserRepo, secret: State<Secret>)
+pub fn auth(mut cookies: Cookies, login_form: Option<Form<Login>>, db: Database, secret: State<Secret>)
         -> Result<Redirect, status::Custom<Template>>{
     let login = login_form.unwrap().into_inner();
 
@@ -46,7 +48,7 @@ pub fn auth(mut cookies: Cookies, login_form: Option<Form<Login>>, repo: UserRep
         )
     };
 
-    match repo.get_by_email(&login.email) {
+    match User::get_by_email(&db, &login.email) {
         Some(ref user) => {
             let password = argon2i_simple(&login.password, &secret.0);
             let hashed = base64::encode(&password);

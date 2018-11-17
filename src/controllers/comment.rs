@@ -8,9 +8,8 @@ use std::collections::HashMap;
 
 use controllers::post;
 use auth::UserToken;
-use models::NewComment;
-use repositories::comments::CommentRepo;
-use repositories::posts::PostRepo;
+use db::Database;
+use models::{Comment, NewComment, Post};
 
 #[derive(FromForm)]
 pub struct CommentForm {
@@ -36,8 +35,7 @@ impl CommentForm {
 pub fn new(
     post_id: i32,
     form: Form<CommentForm>,
-    comment_repo: CommentRepo,
-    post_repo: PostRepo,
+    db: Database,
     user: UserToken,
 ) -> Result<Redirect, BadRequest<JsonValue>> {
     let comment = form.into_inner();
@@ -46,7 +44,7 @@ pub fn new(
         return Err(BadRequest(Some(json!(e))));
     }
 
-    let post = match post_repo.get(post_id) {
+    let post = match Post::get(&db, post_id) {
         Ok(post) => post,
         Err(_) => return Err(BadRequest(None)),
     };
@@ -62,6 +60,6 @@ pub fn new(
         creation_date: Utc::now().naive_utc(),
     };
 
-    comment_repo.insert(&comment);
+    Comment::insert(&db, &comment);
     Ok(Redirect::to(uri!(post::get_by_slug: post.slug)))
 }

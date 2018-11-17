@@ -29,7 +29,6 @@ extern crate slug;
 pub mod controllers;
 pub mod db;
 pub mod models;
-pub mod repositories;
 pub mod schema;
 pub mod auth;
 pub mod pagination;
@@ -55,8 +54,6 @@ pub struct Secret(String);
 pub fn rocket() -> rocket::Rocket {
     rocket::ignite()
         .attach(Template::fairing())
-        .manage(repositories::users::factory)
-        .manage(repositories::posts::factory)
         .mount(
             "/",
             routes![

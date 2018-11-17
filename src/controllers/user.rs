@@ -1,11 +1,12 @@
-use serde_json::map::Map;
-use auth::UserToken;
 use rocket::{get, post};
-use models::NewUser;
-use repositories::users::UserRepo;
 use rocket::response::status::BadRequest;
 use rocket::request::Form;
 use rocket_contrib::templates::Template;
+use serde_json::map::Map;
+
+use auth::UserToken;
+use db::Database;
+use models::{NewUser, User};
 
 #[get("/new")]
 pub fn new(token: UserToken) -> Result<Template, BadRequest<String>> {
@@ -13,7 +14,7 @@ pub fn new(token: UserToken) -> Result<Template, BadRequest<String>> {
 }
 
 #[post("/create", data = "<user_form>")]
-pub fn create(user_form: Form<NewUser>, repo: UserRepo, token: UserToken)
+pub fn create(user_form: Form<NewUser>, db: Database, token: UserToken)
               -> Result<Template, BadRequest<Template>> {
     let form = user_form.into_inner();
 
@@ -21,7 +22,7 @@ pub fn create(user_form: Form<NewUser>, repo: UserRepo, token: UserToken)
         return Err(BadRequest(Some(Template::render("user/new", json!({ "user": token, "error": e })))));
     }
 
-    if let Some(user) = repo.get_by_email_or_name(&form.email, &form.name) {
+    if let Some(user) = User::get_by_email_or_name(&db, &form.email, &form.name) {
         let mut errors = Map::new();
         if form.name == user.name {
            errors.entry("name").or_insert(json!("This user name already exists").0);

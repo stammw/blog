@@ -9,8 +9,8 @@ extern crate lazy_static;
 use chrono::{Duration, Utc};
 use regex::Regex;
 use rocket::http::Status;
-use stammw_blog::repositories::posts::PostRepo;
 use stammw_blog::models::Post;
+use stammw_blog::db::Database;
 
 mod helpers;
 use helpers::{get, post, post_req};
@@ -204,7 +204,7 @@ fn list_no_params() {
 fn check_post(url: &str, body: &str) -> Post {
     let mut post = None;
     post_req(url, body, true, |req| {
-        let repo = req.inner().guard::<PostRepo>().unwrap();
+        let db = req.inner().guard::<Database>().unwrap();
 
         let res = req.dispatch();
         assert_eq!(res.status(), Status::SeeOther);
@@ -213,9 +213,9 @@ fn check_post(url: &str, body: &str) -> Post {
         println!("location: {}", location);
 
         if let Some(id) = parse_location_id(location) {
-            post = repo.get(id).ok();
+            post = Post::get(&db, id).ok();
         } else if let Some(slug) = parse_location_slug(location) {
-            post = repo.get_by_slug(slug)
+            post = Post::get_by_slug(&db, slug)
                 .map(|p| p.0).ok();
         }
 
