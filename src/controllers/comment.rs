@@ -3,6 +3,7 @@ use rocket::post;
 use rocket::request::{Form};
 use rocket::response::Redirect;
 use rocket::response::status::BadRequest;
+use rocket_contrib::json::JsonValue;
 use std::collections::HashMap;
 
 use controllers::post;
@@ -38,7 +39,7 @@ pub fn new(
     comment_repo: CommentRepo,
     post_repo: PostRepo,
     user: UserToken,
-) -> Result<Redirect, BadRequest<serde_json::Value>> {
+) -> Result<Redirect, BadRequest<JsonValue>> {
     let comment = form.into_inner();
 
     if let Err(e) = comment.validate() {

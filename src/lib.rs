@@ -1,7 +1,6 @@
 #![feature(plugin, proc_macro_hygiene, custom_derive, decl_macro)]
 #![allow(proc_macro_derive_resolution_fallback)] // This can be removed after diesel-1.4
 
-#[macro_use]
 extern crate serde_json;
 #[macro_use]
 extern crate serde_derive;
@@ -17,6 +16,7 @@ extern crate r2d2;
 extern crate r2d2_diesel;
 #[macro_use]
 extern crate rocket;
+#[macro_use]
 extern crate rocket_contrib;
 extern crate serde;
 extern crate base64;

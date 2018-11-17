@@ -15,10 +15,11 @@ pub struct UserToken {
     pub name: String,
 }
 
+// TODO use coookies from rocket
 impl UserToken {
     pub fn to_jwt(self, secret: &String) -> String {
         let header = json!({});
-        frank_jwt::encode(header, secret, &json!(self), Algorithm::HS256)
+        frank_jwt::encode(header.0, secret, &json!(self), Algorithm::HS256)
             .unwrap()
     }
 
@@ -29,10 +30,10 @@ impl UserToken {
                 warn!("jwt {} failed {:?}", jwt, e);
                 None
             },
-        
+
         }
     }
-    
+
     pub fn to_cookie<'a>(self, secret: &String) -> Cookie<'a> {
         Cookie::build(COOKIE_NAME, self.to_jwt(&secret))
             .max_age(Duration::days(1))
@@ -78,7 +79,7 @@ impl<'a, 'r> FromRequest<'a, 'r> for ForwardUserToken {
 mod tests {
     use super::*;
     const SECRET: &'static str = "secret";
-    
+
     #[test]
     fn encoded_can_be_decoded() {
         let jwt = UserToken { id: 1, name: "name12".to_string() }.to_jwt(&SECRET.to_string());
@@ -93,7 +94,7 @@ mod tests {
         let token = UserToken::from_jwt("not a real jwt".to_string(), &SECRET.to_string());
         assert!(token.is_none());
     }
-    
+
     #[test]
     fn from_jwt_fails_if_empty() {
         let token = UserToken::from_jwt(String::new(), &SECRET.to_string());

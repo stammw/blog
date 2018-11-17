@@ -6,7 +6,7 @@ use rocket::response::status::{BadRequest, NotFound};
 use rocket::http::Status;
 use rocket::response::Redirect;
 use rocket_contrib::templates::Template;
-use serde_json::value::Value;
+use rocket_contrib::json::JsonValue;
 use slug;
 
 use auth::{ForwardUserToken, UserToken};
@@ -16,13 +16,13 @@ use repositories::posts::PostRepo;
 
 fn index_pagination(pagination: PaginationParams, post_repo: PostRepo, user: Option<UserToken>)
          -> Result<Template, Redirect> {
-    let last_posts: Vec<Value> = post_repo.all_published(5, pagination.page as i64 - 1)
+    let last_posts: Vec<JsonValue> = post_repo.all_published(5, pagination.page as i64 - 1)
         .into_iter()
         .map(|(u, p)| {
             let mut post = json!(p.to_html());
             {
                 let post_json = post.as_object_mut().unwrap();
-                post_json.insert("user".to_string(), json!(u));
+                post_json.insert("user".to_string(), json!(u).0);
             }
             post
         }).collect();
@@ -98,10 +98,9 @@ pub fn get_by_slug(post_repo: PostRepo, slug: String, user: Option<UserToken>)
                 "post": post.to_html(),
                 "author": author,
                 "comments": comments.into_iter().map(|(comment, author)| {
-                    json!({ "comment": comment, "author": author })
-                }).collect::<Value>(),
+                    json!({ "comment": comment, "author": author }).0
+                }).collect::<serde_json::Value>(),
             });
-            println!("context: {}", context);
             Ok(Template::render("post/display", context))
         }
         Err(diesel::NotFound) => Err(Status::NotFound),

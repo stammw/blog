@@ -24,11 +24,11 @@ pub fn create(user_form: Form<NewUser>, repo: UserRepo, token: UserToken)
     if let Some(user) = repo.get_by_email_or_name(&form.email, &form.name) {
         let mut errors = Map::new();
         if form.name == user.name {
-           errors.entry("name").or_insert(json!("This user name already exists"));
+           errors.entry("name").or_insert(json!("This user name already exists").0);
         }
 
         if form.email == user.email {
-           errors.entry("email").or_insert(json!("This email already exists"));
+           errors.entry("email").or_insert(json!("This email already exists").0);
         }
 
         return Err(BadRequest(Some(Template::render("user/new", json!({ "user": token, "error": errors})))));
