@@ -57,7 +57,6 @@ pub fn rocket() -> rocket::Rocket {
         .attach(Template::fairing())
         .manage(repositories::users::factory)
         .manage(repositories::posts::factory)
-        .manage(db::init_pool())
         .mount(
             "/",
             routes![
@@ -83,6 +82,7 @@ pub fn rocket() -> rocket::Rocket {
             comment::new,
         ])
         .mount("/user", routes![user::new, user::create])
+        .attach(db::Database::fairing())
         .attach(AdHoc::on_attach("Cookies manager", |rocket| {
             println!("Adding token managed state from config...");
             let token_val = rocket.config().get_str("secret")

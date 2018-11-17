@@ -6,3 +6,6 @@ log = "normal"
 secret_key = "yEzF4VKj9GuZnWjAKMt5MJHyUU6puxTDMuC7a9HY0c4="
 limits = { forms = 32768 }
 secret = "test_secret"
+
+[global.databases]
+pg_db= { url="postgres://postgres:password@localhost/blog" }
